@@ -12,6 +12,20 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>Whistlee</h1>
+        <audio controls src="/song.mp3"></audio>
+        <p>
+          <a href="https://freemusicarchive.org/music/Doctor_Turtle/the-mountains-dont-care-about-you/the-void-says-hi">
+            The Void Says Hi
+          </a>
+          by Doctor Turtle
+          <br />
+          <a rel="license" href="https://creativecommons.org/licenses/by/4.0">
+            <img
+              alt="Creative Commons Attribution"
+              src="https://licensebuttons.net/l/by/4.0/88x31.png"
+            />
+          </a>
+        </p>
       </main>
     </div>
   );
