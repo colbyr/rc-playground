@@ -1,0 +1,19 @@
+{
+  "name": "rc-playground",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:colbyr/rc-playground.git",
+  "author": "Colby Rabideau<me@colbyr.com> <me@colbyr.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "husky": "^7.0.1",
+    "lint-staged": "^11.1.2",
+    "prettier": "^2.3.2"
+  },
+  "lint-staged": {
+    "*": "prettier --ignore-unknown --write"
+  },
+  "scripts": {
+    "prepare": "husky install"
+  }
+}
