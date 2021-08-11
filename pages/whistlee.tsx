@@ -13,7 +13,7 @@ export default function Whistlee() {
       return null;
     }
     const analyser = context.createAnalyser();
-    analyser.fftSize = 2048;
+    analyser.fftSize = 512;
     return analyser;
   }, [context]);
 
@@ -28,9 +28,53 @@ export default function Whistlee() {
       return;
     }
 
-    const source = context.createMediaElementSource(audioElement);
-    source.connect(analyser);
-    source.connect(context.destination);
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(
+      (microphoneStream) => {
+        console.info("subscribe to mic");
+        const source = context.createMediaStreamSource(microphoneStream);
+        source.connect(analyser);
+        // source.connect(context.destinationlet canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        let width = canvas.width;
+        let height = canvas.height;
+        console.info(width);
+        console.info(height);
+        const draw = () => {
+          analyser.getByteFrequencyData(dataArray);
+          // console.info(dataArray);
+          ctx.fillStyle = "lightgray";
+          ctx.fillRect(0, 0, width, height);
+
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "rgb(0, 0, 0)";
+          ctx.beginPath();
+
+          let bufferLength = analyser.frequencyBinCount;
+          var sliceWidth = (width * 1.0) / bufferLength;
+          var x = 0;
+          for (var i = 0; i < bufferLength; i++) {
+            var v = dataArray[i] / 128.0;
+            var y = (v * height) / 2;
+
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+
+            x += sliceWidth;
+          }
+          ctx.lineTo(width, height / 2);
+          ctx.stroke();
+
+          requestAnimationFrame(draw);
+        };
+        draw();
+      },
+      (err) => {
+        console.error(err);
+      }
+    );
   }, [context, analyser]);
 
   return (
@@ -63,47 +107,6 @@ export default function Whistlee() {
             }
 
             if (audioElement.paused) {
-              let canvas = document.getElementById("canvas");
-              let ctx = canvas.getContext("2d");
-              let width = canvas.width;
-              let height = canvas.height;
-              console.info(width);
-              console.info(height);
-
-              audioElement.play();
-              const draw = () => {
-                analyser.getByteFrequencyData(dataArray);
-                //console.info(dataArray);
-                ctx.fillStyle = "lightgray";
-                ctx.fillRect(0, 0, width, height);
-
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = "rgb(0, 0, 0)";
-                ctx.beginPath();
-
-                let bufferLength = analyser.frequencyBinCount;
-                var sliceWidth = (width * 1.0) / bufferLength;
-                var x = 0;
-                for (var i = 0; i < bufferLength; i++) {
-                  var v = dataArray[i] / 128.0;
-                  var y = (v * height) / 2;
-
-                  if (i === 0) {
-                    ctx.moveTo(x, y);
-                  } else {
-                    ctx.lineTo(x, y);
-                  }
-
-                  x += sliceWidth;
-                }
-                ctx.lineTo(width, height / 2);
-                ctx.stroke();
-
-                if (!audioRef.current?.paused) {
-                  requestAnimationFrame(draw);
-                }
-              };
-              draw();
               return;
             }
 
