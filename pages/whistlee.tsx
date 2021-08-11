@@ -3,20 +3,35 @@ import { useEffect, useMemo, useRef } from "react";
 export default function Whistlee() {
   const session = `${Math.random()}`;
   const audioRef = useRef<HTMLAudioElement>(null);
-  const audioElement = audioRef.current;
   const context = useMemo(
     () => global.AudioContext && new AudioContext(),
     [session]
   );
 
+  const analyser = useMemo(() => {
+    if (!context) {
+      return null;
+    }
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 2048;
+    return analyser;
+  }, [context]);
+
+  const dataArray = useMemo(
+    () => analyser && new Uint8Array(analyser.frequencyBinCount),
+    [analyser]
+  );
+
   useEffect(() => {
-    if (!audioElement) {
+    const audioElement = audioRef.current;
+    if (!audioElement || !analyser) {
       return;
     }
 
-    const track = context.createMediaElementSource(audioElement);
-    track.connect(context.destination);
-  }, [context]);
+    const source = context.createMediaElementSource(audioElement);
+    source.connect(analyser);
+    source.connect(context.destination);
+  }, [context, analyser]);
 
   return (
     <div>
@@ -35,16 +50,28 @@ export default function Whistlee() {
         <audio key={session} controls={true} src="/song.mp3" ref={audioRef} />
         <button
           onClick={() => {
+            console.info(context.state);
             if (context.state === "suspended") {
+              console.info("resume");
               context.resume();
             }
 
-            if (!audioElement) {
+            const audioElement = audioRef.current;
+            if (!audioElement || !dataArray || !analyser) {
+              console.info("no audio element");
               return;
             }
 
             if (audioElement.paused) {
               audioElement.play();
+              const draw = () => {
+                analyser.getByteTimeDomainData(dataArray);
+                console.info(dataArray);
+                if (!audioRef.current?.paused) {
+                  requestAnimationFrame(draw);
+                }
+              };
+              draw();
               return;
             }
 
