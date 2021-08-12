@@ -14,7 +14,7 @@ function startListening() {
   const context = new AudioContext();
 
   const analyser = context.createAnalyser();
-  analyser.fftSize = 4096;
+  analyser.fftSize = 1024;
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(
