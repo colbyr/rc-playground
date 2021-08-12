@@ -19,7 +19,6 @@ function startListening() {
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(
     (microphoneStream) => {
-      console.info("subscribe to mic");
       const source = context.createMediaStreamSource(microphoneStream);
       // https://en.wikipedia.org/wiki/Band-pass_filter
       const filter = new BiquadFilterNode(context, {
@@ -33,8 +32,7 @@ function startListening() {
       let ctx = canvas.getContext("2d")!;
       let width = canvas.width;
       let height = canvas.height;
-      console.info(width);
-      console.info(height);
+      const borderHeight = Math.round(height * 0.05);
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
         ctx.fillStyle = "#000";
@@ -46,25 +44,32 @@ function startListening() {
 
         let bufferLength = analyser.frequencyBinCount;
         const displayLength = bufferLength / 8;
-        var sliceWidth = (width * 1.0) / displayLength;
+        var sliceWidth = Math.floor((width * 1.0) / displayLength);
         var x = 0;
+        let loudestI = -1;
         for (var i = 0; i < displayLength; i++) {
           // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
           const magnitude = dataArray[i];
-          // console.info(color);
-          const v = magnitude / 256;
+          if (magnitude > 64 && magnitude > (dataArray[loudestI] || 0)) {
+            loudestI = i;
+          }
+          const v = (magnitude + 1) / 256;
 
-          const lightness = 50; // Math.abs(v * 50 - 100);
+          const lightness = Math.abs(v * 50);
           const hue = Math.abs((i / displayLength) * 360 - 360);
           ctx.fillStyle = `hsl(${hue}, 100%, ${lightness}%)`;
 
-          var y = v * height;
+          var y = v * (height - borderHeight);
           const rectHeight = v * (height / 10);
           ctx.fillRect(x, y - rectHeight, sliceWidth, rectHeight);
 
           x += sliceWidth;
         }
-        ctx.stroke();
+
+        const borderHue = Math.abs((loudestI / displayLength) * 360 - 360);
+        const loudestV = dataArray[loudestI] / 256;
+        ctx.fillStyle = `hsl(${borderHue}, 100%, 50%, ${loudestV})`;
+        ctx.fillRect(0, height - borderHeight, width, borderHeight);
 
         requestAnimationFrame(draw);
       };
