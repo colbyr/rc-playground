@@ -37,28 +37,30 @@ function startListening() {
       console.info(height);
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
-        ctx.fillStyle = "lightgray";
+        ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, width, height);
 
         ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgb(0, 0, 0)";
+        ctx.strokeStyle = "hsl(0, 0%, 100%)";
         ctx.beginPath();
 
         let bufferLength = analyser.frequencyBinCount;
-        const displayLength = bufferLength; // / 8;
+        const displayLength = bufferLength / 8;
         var sliceWidth = (width * 1.0) / displayLength;
         var x = 0;
         for (var i = 0; i < displayLength; i++) {
           // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
-          var v = dataArray[i] / 128.0;
-          var y = v * height;
-          // var y = rawY < height / 2 ? 0 : rawY;
+          const magnitude = dataArray[i];
+          // console.info(color);
+          const v = magnitude / 256;
 
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
+          const lightness = 50; // Math.abs(v * 50 - 100);
+          const hue = Math.abs((i / displayLength) * 360 - 360);
+          ctx.fillStyle = `hsl(${hue}, 100%, ${lightness}%)`;
+
+          var y = v * height;
+          const rectHeight = v * (height / 10);
+          ctx.fillRect(x, y - rectHeight, sliceWidth, rectHeight);
 
           x += sliceWidth;
         }
