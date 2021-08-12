@@ -1,6 +1,8 @@
 export {};
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+canvas.width = window.innerWidth * 0.75;
+canvas.height = window.innerHeight * 0.25;
 const startButton = document.getElementById("start") as HTMLButtonElement;
 
 startButton.addEventListener("click", () => {
@@ -8,10 +10,11 @@ startButton.addEventListener("click", () => {
 });
 
 function startListening() {
+  startButton.parentElement?.removeChild(startButton);
   const context = new AudioContext();
 
   const analyser = context.createAnalyser();
-  analyser.fftSize = 512;
+  analyser.fftSize = 4096;
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(
@@ -26,7 +29,6 @@ function startListening() {
       console.info(height);
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
-        // console.info(dataArray);
         ctx.fillStyle = "lightgray";
         ctx.fillRect(0, 0, width, height);
 
@@ -35,11 +37,13 @@ function startListening() {
         ctx.beginPath();
 
         let bufferLength = analyser.frequencyBinCount;
-        var sliceWidth = (width * 1.0) / bufferLength;
+        const displayLength = bufferLength / 8;
+        var sliceWidth = (width * 1.0) / displayLength;
         var x = 0;
-        for (var i = 0; i < bufferLength; i++) {
-          var v = dataArray[i] / 128.0;
-          var y = (v * height) / 2;
+        for (var i = 0; i < displayLength; i++) {
+          var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
+          var y = v * height;
+          // var y = rawY < height / 2 ? 0 : rawY;
 
           if (i === 0) {
             ctx.moveTo(x, y);
@@ -49,7 +53,6 @@ function startListening() {
 
           x += sliceWidth;
         }
-        ctx.lineTo(width, height / 2);
         ctx.stroke();
 
         requestAnimationFrame(draw);
