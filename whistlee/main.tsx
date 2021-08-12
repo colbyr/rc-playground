@@ -21,7 +21,15 @@ function startListening() {
     (microphoneStream) => {
       console.info("subscribe to mic");
       const source = context.createMediaStreamSource(microphoneStream);
-      source.connect(analyser);
+      // https://en.wikipedia.org/wiki/Band-pass_filter
+      const filter = new BiquadFilterNode(context, {
+        type: "bandpass",
+        Q: 10,
+        frequency: 1000,
+      });
+      source.connect(filter);
+      filter.connect(analyser);
+      // source.connect(analyser);
       let ctx = canvas.getContext("2d")!;
       let width = canvas.width;
       let height = canvas.height;
@@ -37,11 +45,12 @@ function startListening() {
         ctx.beginPath();
 
         let bufferLength = analyser.frequencyBinCount;
-        const displayLength = bufferLength / 8;
+        const displayLength = bufferLength; // / 8;
         var sliceWidth = (width * 1.0) / displayLength;
         var x = 0;
         for (var i = 0; i < displayLength; i++) {
-          var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
+          // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
+          var v = dataArray[i] / 128.0;
           var y = v * height;
           // var y = rawY < height / 2 ? 0 : rawY;
 
