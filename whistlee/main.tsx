@@ -1,8 +1,8 @@
 export {};
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-canvas.width = window.innerWidth * 0.75;
-canvas.height = window.innerHeight * 0.25;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 const startButton = document.getElementById("start") as HTMLButtonElement;
 
 startButton.addEventListener("click", () => {
@@ -33,6 +33,9 @@ function startListening() {
       let width = canvas.width;
       let height = canvas.height;
       const borderHeight = Math.round(height * 0.05);
+
+      const historicalLoudest: number[] = [];
+
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
         ctx.fillStyle = "#000";
@@ -50,7 +53,7 @@ function startListening() {
         for (var i = 0; i < displayLength; i++) {
           // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
           const magnitude = dataArray[i];
-          if (magnitude > 64 && magnitude > (dataArray[loudestI] || 0)) {
+          if (magnitude > 128 && magnitude > (dataArray[loudestI] || 0)) {
             loudestI = i;
           }
           const v = (magnitude + 1) / 256;
@@ -66,10 +69,25 @@ function startListening() {
           x += sliceWidth;
         }
 
-        const borderHue = Math.abs((loudestI / displayLength) * 360 - 360);
-        const loudestV = dataArray[loudestI] / 256;
-        ctx.fillStyle = `hsl(${borderHue}, 100%, 50%, ${loudestV})`;
-        ctx.fillRect(0, height - borderHeight, width, borderHeight);
+        const historyLength = 1024;
+        if (historicalLoudest.length >= historyLength) {
+          historicalLoudest.pop();
+        }
+        historicalLoudest.unshift(loudestI);
+
+        const historyItemWidth = width / historyLength;
+        for (let i = 0; i < historicalLoudest.length; i++) {
+          const freq = historicalLoudest[i];
+          const borderHue = Math.abs((freq / displayLength) * 360 - 360);
+          ctx.fillStyle = freq < 0 ? "#000" : `hsl(${borderHue}, 100%, 50%)`;
+
+          ctx.fillRect(
+            Math.round(i * historyItemWidth),
+            height - borderHeight,
+            Math.ceil(historyItemWidth),
+            borderHeight
+          );
+        }
 
         requestAnimationFrame(draw);
       };
