@@ -38,9 +38,11 @@ function startListening() {
 
       const historyLength = 1024;
       const historicalLoudest: number[] = new Array(historyLength).fill(-1);
-      const matchTest = makeMatcher([8, 10, 8, 6], () =>
-        window.alert("match!!!!")
-      );
+
+      const matchers = [
+        makeMatcher([6, 7, 6, 9], () => window.alert("Lights on 💡")),
+        makeMatcher([6, 7, 6, 4], () => window.alert("Lights off 😴")),
+      ];
 
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
@@ -111,7 +113,7 @@ function startListening() {
           );
         }
 
-        matchTest(loudestI);
+        matchers.forEach((m) => m(loudestI));
 
         requestAnimationFrame(draw);
       };
