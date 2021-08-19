@@ -1,3 +1,5 @@
+import { getMelodyShape } from "./melody";
+
 export {};
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -14,7 +16,7 @@ function startListening() {
   const context = new AudioContext();
 
   const analyser = context.createAnalyser();
-  analyser.fftSize = 1024;
+  analyser.fftSize = 256;
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(
@@ -34,7 +36,8 @@ function startListening() {
       let height = canvas.height;
       const borderHeight = Math.round(height * 0.05);
 
-      const historicalLoudest: number[] = [];
+      const historyLength = 1024;
+      const historicalLoudest: number[] = new Array(historyLength).fill(-1);
 
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
@@ -53,7 +56,7 @@ function startListening() {
         for (var i = 0; i < displayLength; i++) {
           // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
           const magnitude = dataArray[i];
-          if (magnitude > 128 && magnitude > (dataArray[loudestI] || 0)) {
+          if (magnitude > 64 && magnitude > (dataArray[loudestI] || 0)) {
             loudestI = i;
           }
           const v = (magnitude + 1) / 256;
@@ -69,29 +72,48 @@ function startListening() {
           x += sliceWidth;
         }
 
-        const historyLength = 1024;
         if (historicalLoudest.length >= historyLength) {
           historicalLoudest.pop();
         }
         historicalLoudest.unshift(loudestI);
 
-        const historyItemWidth = width / historyLength;
+        const historyItemWidth = Math.ceil(width / historyLength);
+        const borderSectionHeight = borderHeight / 2;
         for (let i = 0; i < historicalLoudest.length; i++) {
           const freq = historicalLoudest[i];
           const borderHue = Math.abs((freq / displayLength) * 360 - 360);
           ctx.fillStyle = freq < 0 ? "#000" : `hsl(${borderHue}, 100%, 50%)`;
 
           ctx.fillRect(
-            Math.round(i * historyItemWidth),
+            i * historyItemWidth,
             height - borderHeight,
-            Math.ceil(historyItemWidth),
-            borderHeight
+            historyItemWidth,
+            borderSectionHeight
+          );
+        }
+
+        const smoothedItemSlots = 32;
+        const smoothedHistoricalLoudest = getMelodyShape(historicalLoudest);
+        const smoothedItemWidth = Math.ceil(width / smoothedItemSlots);
+        for (let i = 0; i < smoothedItemSlots; i++) {
+          const freq = smoothedHistoricalLoudest[i] || -1;
+          const borderHue = Math.abs((freq / displayLength) * 360 - 360);
+          ctx.fillStyle = freq < 0 ? "#000" : `hsl(${borderHue}, 100%, 50%)`;
+
+          ctx.fillRect(
+            i * smoothedItemWidth,
+            height - borderSectionHeight,
+            smoothedItemWidth,
+            borderSectionHeight
           );
         }
 
         requestAnimationFrame(draw);
       };
       draw();
+      setInterval(() => {
+        console.info(smo.concat());
+      }, 1000);
     },
     (err) => {
       console.error(err);
