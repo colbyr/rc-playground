@@ -1,4 +1,4 @@
-import { getMelodyShape } from "./melody";
+import { getMelodyShape, makeMatcher } from "./melody";
 
 export {};
 
@@ -38,6 +38,9 @@ function startListening() {
 
       const historyLength = 1024;
       const historicalLoudest: number[] = new Array(historyLength).fill(-1);
+      const matchTest = makeMatcher([8, 10, 8, 6], () =>
+        window.alert("match!!!!")
+      );
 
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
@@ -107,6 +110,8 @@ function startListening() {
             borderSectionHeight
           );
         }
+
+        matchTest(loudestI);
 
         requestAnimationFrame(draw);
       };
