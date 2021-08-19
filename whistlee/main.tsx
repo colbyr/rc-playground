@@ -111,9 +111,6 @@ function startListening() {
         requestAnimationFrame(draw);
       };
       draw();
-      setInterval(() => {
-        console.info(smo.concat());
-      }, 1000);
     },
     (err) => {
       console.error(err);
