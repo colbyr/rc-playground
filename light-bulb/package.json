@@ -1,0 +1,13 @@
+{
+  "name": "light-bulb",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Colby Rabideau<me@colbyr.com>",
+  "license": "MIT",
+  "dependencies": {
+    "hap-nodejs": "^0.9.4"
+  },
+  "devDependencies": {
+    "ts-node": "^10.2.1"
+  }
+}
