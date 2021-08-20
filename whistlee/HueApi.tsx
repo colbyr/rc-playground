@@ -1,4 +1,5 @@
 export const fetchHue = (path: any[], init?: RequestInit) => {
+  // @ts-expect-error this works in vite dont worry
   if (import.meta.env.MODE !== "development") {
     return Promise.reject(new Error("Hue unavailabile in production mode"));
   }
