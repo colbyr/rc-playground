@@ -1,3 +1,4 @@
+import { fetchHueLight } from "./HueApi";
 import { getMelodyShape, makeMatcher } from "./melody";
 
 export {};
