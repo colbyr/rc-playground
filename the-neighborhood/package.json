@@ -1,0 +1,21 @@
+{
+  "name": "the-neighborhood",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Colby Rabideau<me@colbyr.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/lodash": "^4.14.172",
+    "@types/node": "^16.7.1",
+    "@types/node-fetch": "^2.5.12",
+    "prettier": "^2.3.2",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "hap-nodejs": "^0.9.4",
+    "lodash": "^4.17.21",
+    "node-fetch": "^2.6.1"
+  }
+}
