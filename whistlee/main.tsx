@@ -1,7 +1,18 @@
-import { fetchHueLight } from "./HueApi";
+import { setHueLightState } from "./HueApi";
 import { getMelodyShape, makeMatcher } from "./melody";
 
-export {};
+const LIGHT_ID = 1;
+
+const matchers = [
+  makeMatcher([6, 7, 6, 9], () => {
+    setHueLightState(LIGHT_ID, { on: true, bri: 254 });
+    console.info("Lights on 💡");
+  }),
+  makeMatcher([6, 7, 6, 4], () => {
+    setHueLightState(LIGHT_ID, { on: false });
+    console.info("Lights off 😴");
+  }),
+];
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 canvas.width = window.innerWidth;
@@ -40,11 +51,6 @@ function startListening() {
       const historyLength = 1024;
       const historicalLoudest: number[] = new Array(historyLength).fill(-1);
 
-      const matchers = [
-        makeMatcher([6, 7, 6, 9], () => window.alert("Lights on 💡")),
-        makeMatcher([6, 7, 6, 4], () => window.alert("Lights off 😴")),
-      ];
-
       const draw = () => {
         analyser.getByteFrequencyData(dataArray);
         ctx.fillStyle = "#000";
@@ -62,7 +68,7 @@ function startListening() {
         for (var i = 0; i < displayLength; i++) {
           // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
           const magnitude = dataArray[i];
-          if (magnitude > 64 && magnitude > (dataArray[loudestI] || 0)) {
+          if (magnitude > 128 && magnitude > (dataArray[loudestI] || 0)) {
             loudestI = i;
           }
           const v = (magnitude + 1) / 256;
@@ -125,3 +131,5 @@ function startListening() {
     }
   );
 }
+
+export {};

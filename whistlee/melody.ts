@@ -59,6 +59,7 @@ export const makeMatcher = (pattern: number[], trigger: () => void) => {
     const isNewEntry = nextEntry !== patternSoFar[patternSoFar.length - 1];
     if (isNewEntry) {
       patternSoFar.push(nextEntry);
+      nextEntry !== -1 && console.info("👂", nextEntry);
     }
 
     if (patternSoFar.length > pattern.length) {
@@ -74,13 +75,6 @@ export const makeMatcher = (pattern: number[], trigger: () => void) => {
 
     while (patternSoFar.length) {
       if (isPartialMatch(patternSoFar)) {
-        isNewEntry &&
-          console.info(
-            "partial",
-            pattern.toString(),
-            "=>",
-            patternSoFar.toString()
-          );
         return false;
       }
 
