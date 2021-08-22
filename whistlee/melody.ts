@@ -56,7 +56,8 @@ export const makeMatcher = (pattern: number[], trigger: () => void) => {
     buffer.shift();
 
     const nextEntry = modeFast(buffer);
-    const isNewEntry = nextEntry !== patternSoFar[patternSoFar.length - 1];
+    const prevEntry = patternSoFar[patternSoFar.length - 1];
+    const isNewEntry = nextEntry !== prevEntry;
     if (isNewEntry) {
       patternSoFar.push(nextEntry);
       nextEntry !== -1 && console.info("👂", nextEntry);
@@ -73,12 +74,9 @@ export const makeMatcher = (pattern: number[], trigger: () => void) => {
       return true;
     }
 
-    while (patternSoFar.length) {
+    while (patternSoFar.length > 1) {
       if (isPartialMatch(patternSoFar)) {
         return false;
-      }
-
-      if (patternSoFar.length > 1) {
       }
 
       patternSoFar.shift();

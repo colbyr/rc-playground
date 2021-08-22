@@ -1,14 +1,17 @@
 import { setHueLightState } from "./HueApi";
 import { getMelodyShape, makeMatcher } from "./melody";
 
+const FFT_SIZE = 256;
+const HISTORY_SIZE = 1024;
 const LIGHT_ID = 1;
+const MIN_LOUDNESS = 128; // max 256
 
 const matchers = [
   makeMatcher([6, 7, 6, 9], () => {
     setHueLightState(LIGHT_ID, { on: true, bri: 254 });
     console.info("Lights on 💡");
   }),
-  makeMatcher([6, 7, 6, 4], () => {
+  makeMatcher([6, 7, 6, 5], () => {
     setHueLightState(LIGHT_ID, { on: false });
     console.info("Lights off 😴");
   }),
@@ -28,7 +31,7 @@ function startListening() {
   const context = new AudioContext();
 
   const analyser = context.createAnalyser();
-  analyser.fftSize = 256;
+  analyser.fftSize = FFT_SIZE;
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(
@@ -48,7 +51,7 @@ function startListening() {
       let height = canvas.height;
       const borderHeight = Math.round(height * 0.05);
 
-      const historyLength = 1024;
+      const historyLength = HISTORY_SIZE;
       const historicalLoudest: number[] = new Array(historyLength).fill(-1);
 
       const draw = () => {
@@ -68,7 +71,10 @@ function startListening() {
         for (var i = 0; i < displayLength; i++) {
           // var v = (Math.max(128.0, dataArray[i] * 1.0) - 128.0) / 128.0;
           const magnitude = dataArray[i];
-          if (magnitude > 128 && magnitude > (dataArray[loudestI] || 0)) {
+          if (
+            magnitude > MIN_LOUDNESS &&
+            magnitude > (dataArray[loudestI] || 0)
+          ) {
             loudestI = i;
           }
           const v = (magnitude + 1) / 256;
