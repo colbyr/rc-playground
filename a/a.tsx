@@ -1,5 +1,4 @@
 const FFT_SIZE = Math.pow(2, 14);
-const DECIBLE_MIN = 32;
 const PITCH_HZ = 441;
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -21,7 +20,6 @@ function startListening() {
 
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = FFT_SIZE;
-      analyser.smoothingTimeConstant = 0.5;
 
       const freqSampleRateHz = audioContext.sampleRate;
       const freqCount = analyser.frequencyBinCount;
@@ -93,14 +91,12 @@ function startListening() {
           canvasContext.fillRect(x, y, width, height);
         }
 
-        if (loudestI > -1 && analyserSample[loudestI] > DECIBLE_MIN) {
-          canvasContext.fillStyle = "#00FF00";
-          const width = 1;
-          const height = canvasHeight;
-          const x = loudestI * columnWidth - 1;
-          const y = 0;
-          canvasContext.fillRect(x, y, width + 2, height);
-        }
+        canvasContext.fillStyle = "#00FF00";
+        const width = 1;
+        const height = canvasHeight;
+        const x = loudestI * columnWidth - 1;
+        const y = 0;
+        canvasContext.fillRect(x, y, width + 2, height);
 
         requestAnimationFrame(draw);
       }
