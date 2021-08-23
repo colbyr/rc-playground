@@ -1,5 +1,6 @@
-const FFT_SIZE = Math.pow(2, 14);
+const FFT_SIZE = Math.pow(2, 12);
 const PITCH_HZ = 441;
+const SMOOTHING_CONSTANT = 0.9;
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 canvas.height = Math.round(window.innerHeight / 2);
@@ -15,16 +16,16 @@ function startListening() {
     .getUserMedia({ audio: true })
     .then((microphoneStream) => {
       const audioContext = new AudioContext({
-        latencyHint: "balanced",
+        latencyHint: "interactive",
       });
 
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = FFT_SIZE;
+      analyser.smoothingTimeConstant = SMOOTHING_CONSTANT;
 
       const freqSampleRateHz = audioContext.sampleRate;
       const freqCount = analyser.frequencyBinCount;
       const freqMaxHz = freqSampleRateHz / 2;
-      const freqRangeHz = [0, freqMaxHz];
       const freqStepHz = freqMaxHz / freqCount;
 
       console.table([
