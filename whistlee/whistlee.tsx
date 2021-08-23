@@ -5,6 +5,7 @@ const FFT_SIZE = 256;
 const HISTORY_SIZE = 1024;
 const LIGHT_ID = 1;
 const MIN_LOUDNESS = 128; // max 256
+const SMOOTHING_CONSTANT = 0.5;
 
 const matchers = [
   makeMatcher([6, 7, 6, 9], () => {
@@ -32,6 +33,7 @@ function startListening() {
 
   const analyser = context.createAnalyser();
   analyser.fftSize = FFT_SIZE;
+  analyser.smoothingTimeConstant = SMOOTHING_CONSTANT;
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(
