@@ -15,7 +15,7 @@ export default (options) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, "index.html"),
-          tuner: resolve(__dirname, "tuner/index.html"),
+          a: resolve(__dirname, "a/index.html"),
           whistlee: resolve(__dirname, "whistlee/index.html"),
         },
       },
