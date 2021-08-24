@@ -3,7 +3,7 @@ import { range } from "lodash";
 const FFT_SIZE = Math.pow(2, 15);
 const MIN_LOUDNESS = 64;
 const REF_PITCH_HZ = 441;
-const SMOOTHING_CONSTANT = 0;
+const SMOOTHING_CONSTANT = 0.5;
 const GR = 1.61803398875;
 
 console.table({
@@ -208,7 +208,7 @@ function startListening() {
               offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
               canvasHeight / GR,
               indicatorWidth,
-              indicatorWidth * GR * GR
+              indicatorWidth * GR
             );
           } else {
             const indicatorWidth = blackKeyWidth / GR;
@@ -217,7 +217,7 @@ function startListening() {
               (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
               canvasHeight / 2 / GR,
               indicatorWidth,
-              indicatorWidth * GR * GR
+              indicatorWidth * GR
             );
           }
         }
