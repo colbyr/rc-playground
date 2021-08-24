@@ -49,7 +49,12 @@ const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasContext = canvas.getContext("2d")!;
 canvas.height = Math.round(window.innerHeight / 2);
 canvas.width = window.innerWidth;
-const note = document.getElementById("note")!;
+
+const numberEl = document.getElementById("number")!;
+const noteEl = document.getElementById("note")!;
+const octaveEl = document.getElementById("octave")!;
+const frequencyEl = document.getElementById("frequency")!;
+
 const startButton = document.getElementById("start") as HTMLButtonElement;
 startButton.addEventListener("click", () => {
   startListening();
@@ -189,7 +194,10 @@ function startListening() {
           const octave = Math.floor(h / 12);
           const n = h % 12;
           const noteName = noteNames[n];
-          note.innerHTML = `${h} - ${noteName}${octave} - ${freq}`;
+          numberEl.innerHTML = `${h}`;
+          noteEl.innerHTML = noteName;
+          octaveEl.innerHTML = `${octave}`;
+          frequencyEl.innerHTML = `${freq}`;
 
           const keyI = h - 9;
           const offset = offsets[keyI];
