@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tuner</title>
+  </head>
+  <body style="margin: 0">
+    <div>
+      <canvas
+        id="canvas"
+        style="background-color: #000; height: 50vh; width: 100vw"
+      />
+    </div>
+    <p style="margin: 1rem">
+      <strong style="color: #ff0000">Red</strong> lines are A441.
+      <strong style="color: #00ff00">Green</strong> line is the loudest
+      frequency sample.
+    </p>
+    <button id="start" style="margin: 1rem; padding: 0.5rem 1rem">
+      start listening
+    </button>
+    <script type="module" src="./tuner.tsx"></script>
+  </body>
+</html>
