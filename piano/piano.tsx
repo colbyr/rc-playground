@@ -208,7 +208,7 @@ function startListening() {
               offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
               canvasHeight / GR,
               indicatorWidth,
-              indicatorWidth * GR * GR
+              indicatorWidth * GR
             );
           } else {
             const indicatorWidth = blackKeyWidth / GR;
@@ -217,7 +217,7 @@ function startListening() {
               (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
               canvasHeight / 2 / GR,
               indicatorWidth,
-              indicatorWidth * GR * GR
+              indicatorWidth * GR
             );
           }
         }
