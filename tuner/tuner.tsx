@@ -1,7 +1,17 @@
-import { range, round } from "lodash";
+import { range } from "lodash";
+
 const FFT_SIZE = Math.pow(2, 15);
+const MIN_LOUDNESS = 64;
 const REF_PITCH_HZ = 441;
 const SMOOTHING_CONSTANT = 0;
+const GR = 1.61803398875;
+
+console.table({
+  FFT_SIZE,
+  MIN_LOUDNESS,
+  REF_PITCH_HZ,
+  SMOOTHING_CONSTANT,
+});
 
 const noteNames = [
   "c", // 0
@@ -20,8 +30,20 @@ const noteNames = [
 
 const whiteKeys = 2 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 1;
 const blackKeys = 1 + 5 + 5 + 5 + 5 + 5 + 5 + 5;
-const keys = range(0, 88).map((n) => noteNames[(n + 9) % 12]);
-console.info({ keys, whiteKeys, blackKeys });
+const keys = range(0, 88)
+  .map((n) => n + 9)
+  .map((n) => noteNames[n % 12]);
+
+const offsets = [0];
+for (let i = 1; i < keys.length; i++) {
+  const key = keys[i];
+  const prev = offsets[offsets.length - 1];
+  if (key.length === 1) {
+    offsets.push(prev + 1);
+  } else {
+    offsets.push(prev);
+  }
+}
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasContext = canvas.getContext("2d")!;
@@ -41,7 +63,7 @@ function drawKeys(canvasContext: CanvasRenderingContext2D) {
   const whiteKeyWidth = canvasWidth / whiteKeys;
   const whiteKeyFont = `${Math.round(whiteKeyWidth / 2)}px monospace`;
 
-  const blackKeyWidth = whiteKeyWidth * 0.66;
+  const blackKeyWidth = whiteKeyWidth / GR;
   const blackKeyOffset = blackKeyWidth / 2;
   const blackKeyFont = `${Math.round(blackKeyWidth / 2)}px monospace`;
 
@@ -146,12 +168,13 @@ function startListening() {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         const whiteKeyWidth = canvasWidth / whiteKeys;
+        const blackKeyWidth = whiteKeyWidth / GR;
 
         drawKeys(canvasContext);
 
         const loudestI = analyserSample.reduce(
           (loudestISoFar: number, loudness, i, sample) => {
-            if (loudness > sample[loudestISoFar]) {
+            if (loudness > MIN_LOUDNESS && loudness > sample[loudestISoFar]) {
               return i;
             }
             return loudestISoFar;
@@ -167,6 +190,28 @@ function startListening() {
           const n = h % 12;
           const noteName = noteNames[n];
           note.innerHTML = `${h} - ${noteName}${octave} - ${freq}`;
+
+          const keyI = h - 9;
+          const offset = offsets[keyI];
+          if (noteName.length === 1) {
+            const indicatorWidth = whiteKeyWidth / GR;
+            canvasContext.fillStyle = "#FF0000";
+            canvasContext.fillRect(
+              offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
+              canvasHeight / GR,
+              indicatorWidth,
+              indicatorWidth * GR * GR
+            );
+          } else {
+            const indicatorWidth = blackKeyWidth / GR;
+            canvasContext.fillStyle = "#FF0000";
+            canvasContext.fillRect(
+              (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
+              canvasHeight / 2 / GR,
+              indicatorWidth,
+              indicatorWidth * GR * GR
+            );
+          }
         }
 
         requestAnimationFrame(draw);
