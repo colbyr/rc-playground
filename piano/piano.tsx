@@ -1,9 +1,10 @@
 import { range } from "lodash";
+import { modeFast } from "simple-statistics";
 
 const FFT_SIZE = Math.pow(2, 15);
 const MIN_LOUDNESS = 64;
 const REF_PITCH_HZ = 441;
-const SMOOTHING_CONSTANT = 0.5;
+const SMOOTHING_CONSTANT = 0.8;
 const GR = 1.61803398875;
 
 console.table({
@@ -44,6 +45,15 @@ for (let i = 1; i < keys.length; i++) {
     offsets.push(prev);
   }
 }
+
+const makeSmoother = (bufferSize: number) => {
+  const buffer = new Array(bufferSize).fill(-1);
+  return (frequency: number) => {
+    buffer.push(frequency);
+    buffer.shift();
+    return modeFast(buffer);
+  };
+};
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasContext = canvas.getContext("2d")!;
@@ -140,6 +150,7 @@ function startListening() {
       const audioContext = new AudioContext({
         latencyHint: "interactive",
       });
+      const smoothFreq = makeSmoother(16);
 
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = FFT_SIZE;
@@ -149,7 +160,9 @@ function startListening() {
       const freqCount = analyser.frequencyBinCount;
       const freqMaxHz = freqSampleRateHz / 2;
       const freqStepHz = freqMaxHz / freqCount;
-      const freqRange = range(0, freqCount).map((n) => n * freqStepHz);
+      const freqRange = range(0, freqCount).map(
+        (n) => n * freqStepHz + freqStepHz / 2
+      );
       console.info({
         freqRange,
       });
@@ -188,9 +201,9 @@ function startListening() {
         );
 
         const freq = freqRange[loudestI];
-        if (freq && freq > 0) {
-          const c0 = REF_PITCH_HZ * Math.pow(2, -4.75);
-          const h = Math.round(12 * Math.log2(freq / c0));
+        const c0 = REF_PITCH_HZ * Math.pow(2, -4.75);
+        const h = smoothFreq(Math.round(12 * Math.log2(freq / c0)));
+        if (freq && h > 0) {
           const octave = Math.floor(h / 12);
           const n = h % 12;
           const noteName = noteNames[n];
