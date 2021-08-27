@@ -16,6 +16,7 @@ export default (options) => {
         input: {
           main: resolve(__dirname, "index.html"),
           a: resolve(__dirname, "a/index.html"),
+          "canvas-demo": resolve(__dirname, "canvas-demo/index.html"),
           piano: resolve(__dirname, "piano/index.html"),
           whistlee: resolve(__dirname, "whistlee/index.html"),
         },
