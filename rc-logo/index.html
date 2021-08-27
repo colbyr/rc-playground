@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Canvas Demo</title>
+    <title>RC Logo</title>
   </head>
   <body
     style="
@@ -27,6 +27,7 @@
       function* rcLogoStep() {
         context.fillStyle = "white";
         context.fillRect(0, 0, canvasElement.width, canvasElement.height);
+        yield;
 
         context.fillStyle = "black";
         context.fillRect(10, 290, 280, 80);
