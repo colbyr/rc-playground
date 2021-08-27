@@ -17,7 +17,7 @@ export default (options) => {
           main: resolve(__dirname, "index.html"),
           a: resolve(__dirname, "a/index.html"),
           piano: resolve(__dirname, "piano/index.html"),
-          "rc-logo": resolve(__dirname, "canvas-demo/index.html"),
+          "rc-logo": resolve(__dirname, "rc-logo/index.html"),
           whistlee: resolve(__dirname, "whistlee/index.html"),
         },
       },
