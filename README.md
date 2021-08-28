@@ -6,7 +6,7 @@ Workspace for prokects while I'm at [RC](https://recurse.com).
 
 ## Running locally
 
-```
+```sh
 yarn
 yarn dev
 ```
@@ -19,10 +19,11 @@ Add a new folder with an `index.html`.
 ./newpage/index.html
 ```
 
-Add an entry to the vite.config.js:
+Add an entry to the [`"publishedPages"`](https://github.com/colbyr/rc-playground/blob/b4cad69efc43e46a1713b0785639f2b70649decc/package.json#L34-L39) field in package.json.
 
+```json
+"publishedPages": [
+  "newpage",
+  // ...
+],
 ```
-
-```
-
-... [like this](https://github.com/colbyr/rc-playground/blob/b442c5123c37bc0e483f5c7a390b44e0c34cfe45/vite.config.js#L11) for example.
