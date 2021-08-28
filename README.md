@@ -23,7 +23,8 @@ Add an entry to the [`"publishedPages"`](https://github.com/colbyr/rc-playground
 
 ```json
 "publishedPages": [
+  "...",
   "newpage",
-  // ...
+  "..."
 ],
 ```
