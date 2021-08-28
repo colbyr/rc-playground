@@ -7,11 +7,12 @@
     <title>Colby's RC Playground</title>
     <style>
       body {
-        min-height: 100vh;
         font-family: sans-serif;
+        margin: 0;
       }
       h1 {
-        font-size: 1rem;
+        font-size: 1.5rem;
+        margin: 0;
       }
       a {
         color: inherit;
@@ -19,44 +20,74 @@
       a:hover {
         color: #fa4b00;
       }
+      header {
+        border-bottom: 1px dashed;
+        padding: 1rem 0;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
       .container {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
         margin: 0 auto;
+        min-height: 100vh;
         min-width: 50vw;
+        padding: 1rem;
       }
       .container h2 {
+        font-size: 1.25rem;
         margin-bottom: 0.5rem;
       }
       .container p {
         margin-top: 0;
+      }
+
+      ol {
+        list-style: none;
+        padding: 0;
+      }
+
+      footer {
+        border-top: 1px dashed;
+        padding: 1rem;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>Colby's RC Playground</h1>
+        <h1><a href="https://colbyr.com">Colby</a>'s RC Playground</h1>
       </header>
       <main>
-        <div>
-          <h2><a href="/rc-logo/">RC Logo</a></h2>
-          <p>Draw the RC logo with canvas for Friday presentations.</p>
-        </div>
+        <ol>
+          <li>
+            <h2><a href="/rc-logo/">RC Logo</a></h2>
+            <p>Draw the RC logo with canvas for Friday presentations.</p>
+          </li>
 
-        <div>
-          <h2><a href="/piano/">Piano</a></h2>
-          <p>Show the input note overlayed on keys of a piano.</p>
-        </div>
+          <li>
+            <h2><a href="/piano/">Piano</a></h2>
+            <p>Show the input note overlayed on keys of a piano.</p>
+          </li>
 
-        <div>
-          <h2><a href="/a/">A</a></h2>
-          <p>Shows octaves on the frequency graph.</p>
-        </div>
+          <li>
+            <h2><a href="/a/">A</a></h2>
+            <p>Shows octaves on the frequency graph.</p>
+          </li>
 
-        <div>
-          <h2><a href="/whistlee/">Whistlee</a></h2>
-          <p>Detecting whistles with web audio.</p>
-        </div>
+          <li>
+            <h2><a href="/whistlee/">Whistlee</a></h2>
+            <p>Detecting whistles with web audio.</p>
+          </li>
+        </ol>
       </main>
+      <footer>
+        <a href="https://github.com/colbyr/rc-playground/">source</a>
+      </footer>
     </div>
   </body>
 </html>
