@@ -3,6 +3,7 @@ require("dotenv").config();
 import { resolve } from "path";
 import { defineConfig, loadEnv } from "vite";
 import reactRefresh from "@vitejs/plugin-react-refresh";
+import PackageJson from "./package.json";
 
 // https://vitejs.dev/config/
 export default (options) => {
@@ -10,16 +11,18 @@ export default (options) => {
   var HUE_USER_ID = process.env.HUE_USER_ID;
   var hueBridgeUrl = `http://${HUE_BRIDGE_ADDRESS}`;
 
+  var entryPoints = {
+    main: resolve(__dirname, "index.html"),
+    ...PackageJson.publishedPages.reduce((entryPoints, pageName) => {
+      entryPoints[pageName] = resolve(__dirname, `${pageName}/index.html`);
+      return entryPoints;
+    }, {}),
+  };
+
   return defineConfig({
     build: {
       rollupOptions: {
-        input: {
-          main: resolve(__dirname, "index.html"),
-          a: resolve(__dirname, "a/index.html"),
-          piano: resolve(__dirname, "piano/index.html"),
-          "rc-logo": resolve(__dirname, "rc-logo/index.html"),
-          whistlee: resolve(__dirname, "whistlee/index.html"),
-        },
+        input: entryPoints,
       },
     },
     plugins: [reactRefresh()],

@@ -30,5 +30,11 @@
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write"
-  }
+  },
+  "publishedPages": [
+    "a",
+    "piano",
+    "rc-logo",
+    "whistlee"
+  ]
 }
