@@ -1,4 +1,5 @@
 import { range } from "lodash";
+import { fromAudioSource } from "../octavious/octavious";
 import { modeFast } from "simple-statistics";
 
 const FFT_SIZE = Math.pow(2, 15);
@@ -177,44 +178,27 @@ function startListening() {
       ]);
 
       const analyserSample = new Uint8Array(freqCount);
-      const source = audioContext.createMediaStreamSource(microphoneStream);
+      const source: MediaStreamAudioSourceNode =
+        audioContext.createMediaStreamSource(microphoneStream);
       source.connect(analyser);
 
-      function draw() {
-        analyser.getByteFrequencyData(analyserSample);
+      fromAudioSource(source).subscribe(
+        ({ frequency, num, name, octave }) => {
+          const canvasWidth = canvas.width;
+          const canvasHeight = canvas.height;
+          const whiteKeyWidth = canvasWidth / whiteKeys;
+          const blackKeyWidth = whiteKeyWidth / GR;
 
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const whiteKeyWidth = canvasWidth / whiteKeys;
-        const blackKeyWidth = whiteKeyWidth / GR;
+          drawKeys(canvasContext);
 
-        drawKeys(canvasContext);
-
-        const loudestI = analyserSample.reduce(
-          (loudestISoFar: number, loudness, i, sample) => {
-            if (loudness > MIN_LOUDNESS && loudness > sample[loudestISoFar]) {
-              return i;
-            }
-            return loudestISoFar;
-          },
-          0
-        );
-
-        const freq = freqRange[loudestI];
-        const c0 = REF_PITCH_HZ * Math.pow(2, -4.75);
-        const h = smoothFreq(Math.round(12 * Math.log2(freq / c0)));
-        if (freq && h > 0) {
-          const octave = Math.floor(h / 12);
-          const n = h % 12;
-          const noteName = noteNames[n];
-          numberEl.innerHTML = `${h}`;
-          noteEl.innerHTML = noteName;
+          numberEl.innerHTML = `${num}`;
+          noteEl.innerHTML = name;
           octaveEl.innerHTML = `${octave}`;
-          frequencyEl.innerHTML = `${freq}`;
+          frequencyEl.innerHTML = `${frequency}`;
 
-          const keyI = h - 9;
+          const keyI = num - 9;
           const offset = offsets[keyI];
-          if (noteName.length === 1) {
+          if (name.length === 1) {
             const indicatorWidth = whiteKeyWidth / GR;
             canvasContext.fillStyle = "#FF0000";
             canvasContext.fillRect(
@@ -233,12 +217,10 @@ function startListening() {
               indicatorWidth * GR
             );
           }
-        }
-
-        requestAnimationFrame(draw);
-      }
-
-      requestAnimationFrame(draw);
+        },
+        (err) => console.error(err),
+        () => console.info("done!")
+      );
     });
 }
 
