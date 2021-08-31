@@ -1,6 +1,7 @@
 import { range } from "lodash";
 import { fromAudioSource } from "../octavious/octavious";
 import { modeFast } from "simple-statistics";
+import { NoteNames } from "../octavious/notes";
 
 const FFT_SIZE = Math.pow(2, 15);
 const MIN_LOUDNESS = 64;
@@ -15,26 +16,10 @@ console.table({
   SMOOTHING_CONSTANT,
 });
 
-const noteNames = [
-  "c", // 0
-  "c♯", // 1
-  "d",
-  "d♯",
-  "e",
-  "f",
-  "f♯",
-  "g",
-  "g♯",
-  "a", // 9
-  "a♯",
-  "b",
-];
-
 const whiteKeys = 2 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 1;
-const blackKeys = 1 + 5 + 5 + 5 + 5 + 5 + 5 + 5;
 const keys = range(0, 88)
   .map((n) => n + 9)
-  .map((n) => noteNames[n % 12]);
+  .map((n) => NoteNames[n % 12]);
 
 const offsets = [0];
 for (let i = 1; i < keys.length; i++) {
@@ -46,15 +31,6 @@ for (let i = 1; i < keys.length; i++) {
     offsets.push(prev);
   }
 }
-
-const makeSmoother = (bufferSize: number) => {
-  const buffer = new Array(bufferSize).fill(-1);
-  return (frequency: number) => {
-    buffer.push(frequency);
-    buffer.shift();
-    return modeFast(buffer);
-  };
-};
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasContext = canvas.getContext("2d")!;
@@ -151,36 +127,9 @@ function startListening() {
       const audioContext = new AudioContext({
         latencyHint: "interactive",
       });
-      const smoothFreq = makeSmoother(16);
 
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = FFT_SIZE;
-      analyser.smoothingTimeConstant = SMOOTHING_CONSTANT;
-
-      const freqSampleRateHz = audioContext.sampleRate;
-      const freqCount = analyser.frequencyBinCount;
-      const freqMaxHz = freqSampleRateHz / 2;
-      const freqStepHz = freqMaxHz / freqCount;
-      const freqRange = range(0, freqCount).map(
-        (n) => n * freqStepHz + freqStepHz / 2
-      );
-      console.info({
-        freqRange,
-      });
-
-      console.table([
-        {
-          freqSampleRateHz,
-          freqCount,
-          freqMaxHz,
-          freqStepHz,
-        },
-      ]);
-
-      const analyserSample = new Uint8Array(freqCount);
       const source: MediaStreamAudioSourceNode =
         audioContext.createMediaStreamSource(microphoneStream);
-      source.connect(analyser);
 
       fromAudioSource(source).subscribe(
         ({ frequency, num, name, octave }) => {

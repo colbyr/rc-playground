@@ -60,6 +60,19 @@ export function fromAudioSource(
   const smoothFreq = makeSmoother(bufferSize);
 
   return new Observable((subscriber) => {
+    console.info({
+      freqRange,
+    });
+
+    console.table([
+      {
+        freqSampleRateHz,
+        freqCount,
+        freqMaxHz,
+        freqStepHz,
+      },
+    ]);
+
     let nextFrameId: number;
 
     const run = () => {
