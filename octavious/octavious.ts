@@ -1,5 +1,5 @@
 import { range } from "lodash";
-import { from, Observable } from "rxjs";
+import { first, flatMap, from, map, Observable } from "rxjs";
 import { modeFast } from "simple-statistics";
 import { NoteNames } from "./notes";
 
@@ -104,6 +104,28 @@ export function fromAudioSource(
     };
 
     run();
+
     return () => cancelAnimationFrame(nextFrameId);
   });
+}
+
+export function fromMicrophone() {
+  return new Observable<MediaStream>((subscribe) => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((microphoneStream) => {
+        subscribe.next(microphoneStream);
+      })
+      .finally(() => subscribe.complete());
+  }).pipe(
+    flatMap((micStream) => {
+      const audioContext = new AudioContext({
+        latencyHint: "interactive",
+      });
+
+      const source: MediaStreamAudioSourceNode =
+        audioContext.createMediaStreamSource(micStream);
+      return fromAudioSource(source);
+    })
+  );
 }

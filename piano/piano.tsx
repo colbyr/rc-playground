@@ -1,5 +1,5 @@
 import { range } from "lodash";
-import { fromAudioSource } from "../octavious/octavious";
+import { fromAudioSource, fromMicrophone } from "../octavious/octavious";
 import { modeFast } from "simple-statistics";
 import { NoteNames } from "../octavious/notes";
 
@@ -121,56 +121,45 @@ function drawKeys(canvasContext: CanvasRenderingContext2D) {
 drawKeys(canvasContext);
 
 function startListening() {
-  navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then((microphoneStream) => {
-      const audioContext = new AudioContext({
-        latencyHint: "interactive",
-      });
+  fromMicrophone().subscribe(
+    ({ frequency, num, name, octave }) => {
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const whiteKeyWidth = canvasWidth / whiteKeys;
+      const blackKeyWidth = whiteKeyWidth / GR;
 
-      const source: MediaStreamAudioSourceNode =
-        audioContext.createMediaStreamSource(microphoneStream);
+      drawKeys(canvasContext);
 
-      fromAudioSource(source).subscribe(
-        ({ frequency, num, name, octave }) => {
-          const canvasWidth = canvas.width;
-          const canvasHeight = canvas.height;
-          const whiteKeyWidth = canvasWidth / whiteKeys;
-          const blackKeyWidth = whiteKeyWidth / GR;
+      numberEl.innerHTML = `${num}`;
+      noteEl.innerHTML = name;
+      octaveEl.innerHTML = `${octave}`;
+      frequencyEl.innerHTML = `${frequency}`;
 
-          drawKeys(canvasContext);
-
-          numberEl.innerHTML = `${num}`;
-          noteEl.innerHTML = name;
-          octaveEl.innerHTML = `${octave}`;
-          frequencyEl.innerHTML = `${frequency}`;
-
-          const keyI = num - 9;
-          const offset = offsets[keyI];
-          if (name.length === 1) {
-            const indicatorWidth = whiteKeyWidth / GR;
-            canvasContext.fillStyle = "#FF0000";
-            canvasContext.fillRect(
-              offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
-              canvasHeight / GR,
-              indicatorWidth,
-              indicatorWidth * GR
-            );
-          } else {
-            const indicatorWidth = blackKeyWidth / GR;
-            canvasContext.fillStyle = "#FF0000";
-            canvasContext.fillRect(
-              (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
-              canvasHeight / 2 / GR,
-              indicatorWidth,
-              indicatorWidth * GR
-            );
-          }
-        },
-        (err) => console.error(err),
-        () => console.info("done!")
-      );
-    });
+      const keyI = num - 9;
+      const offset = offsets[keyI];
+      if (name.length === 1) {
+        const indicatorWidth = whiteKeyWidth / GR;
+        canvasContext.fillStyle = "#FF0000";
+        canvasContext.fillRect(
+          offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
+          canvasHeight / GR,
+          indicatorWidth,
+          indicatorWidth * GR
+        );
+      } else {
+        const indicatorWidth = blackKeyWidth / GR;
+        canvasContext.fillStyle = "#FF0000";
+        canvasContext.fillRect(
+          (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
+          canvasHeight / 2 / GR,
+          indicatorWidth,
+          indicatorWidth * GR
+        );
+      }
+    },
+    (err) => console.error(err),
+    () => console.info("done!")
+  );
 }
 
 export {};
