@@ -1,0 +1,56 @@
+import { entries } from "lodash";
+import React, { HTMLAttributes, useEffect, useMemo, useRef } from "react";
+import { Observable } from "rxjs";
+
+type PropTypes<T> = {
+  $value: Observable<T>;
+  draw: (opts: {
+    context: CanvasRenderingContext2D;
+    rect: DOMRect;
+    value: T;
+  }) => void;
+};
+
+export function ObservableCanvas<I = number>({
+  draw,
+  $value,
+  ...props
+}: PropTypes<I> & HTMLAttributes<HTMLCanvasElement>) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) {
+      return;
+    }
+    const resize = new ResizeObserver(([canvasEntry]) => {
+      const { width, height } = canvasEntry.contentRect;
+      const canvasElement = canvasEntry.target as HTMLCanvasElement;
+      canvasElement.width = width;
+      canvasElement.height = height;
+    });
+    resize.observe(canvasElement);
+    return () => resize.disconnect();
+  }, [canvasRef]);
+
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) {
+      return;
+    }
+    const context = canvasElement.getContext("2d")!;
+    console.info("start", { canvasElement, context });
+    const subscription = $value.subscribe({
+      next: (value) => {
+        draw({ value, context, rect: canvasElement.getBoundingClientRect() });
+      },
+      error: (error) => {
+        console.error("ObservableCanvas", error);
+        subscription.unsubscribe();
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [$value]);
+
+  return <canvas {...props} ref={canvasRef} />;
+}
