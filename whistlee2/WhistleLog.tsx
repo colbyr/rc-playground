@@ -5,6 +5,7 @@ import {
   ObservableCanvas,
   ObservableCanvasDrawProp,
 } from "../observable-canvas/ObservableCanvas";
+import { makeMatcher } from "../whistlee/melody";
 
 const smoothNoteNumber = makeRollingMode<number | null>({
   defaultValue: null,
@@ -20,6 +21,11 @@ const getSubsequent = (n: number) => {
   }
   return subsequent.length - 1;
 };
+
+const matchers = [
+  makeMatcher(["c♯", "g♯", "c♯"], () => console.info("lights off 😴")),
+  makeMatcher(["c♯", "g♯", "c♯"], () => console.info("lights on 💡")),
+];
 
 type Value = NoteDescriptor | null;
 
@@ -60,7 +66,10 @@ const drawBackground: ObservableCanvasDrawProp<Value> = ({
 };
 
 export const WhistleLog = () => {
-  const $micInput: Observable<Value> = useMemo(() => fromMicrophone(), []);
+  const $micInput: Observable<Value> = useMemo(
+    () => fromMicrophone({ smoothingConstant: 0 }),
+    []
+  );
 
   return (
     <>
@@ -77,6 +86,8 @@ export const WhistleLog = () => {
         <ObservableCanvas
           draw={(opts) => {
             drawBackground(opts);
+            const noteName = opts.value?.name;
+            matchers.forEach((m) => m(noteName));
           }}
           $value={$micInput}
           style={{

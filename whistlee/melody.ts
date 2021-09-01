@@ -29,30 +29,34 @@ export const getMelodyShape = (freqs: number[]) => {
   }, []);
 };
 
-const makeArrayMatcher = (pattern: number[]) => (arr: number[]) => {
-  if (pattern.length !== arr.length) {
-    return false;
-  }
+const makeArrayMatcher =
+  <T>(pattern: T[]) =>
+  (arr: T[]) => {
+    if (pattern.length !== arr.length) {
+      return false;
+    }
 
-  return arr.every((n, i) => n === pattern[i]);
-};
+    return arr.every((n, i) => n === pattern[i]);
+  };
 
-const makePartialArrayMatcher = (pattern: number[]) => (arr: number[]) => {
-  if (arr.length === 0) {
-    return true;
-  }
+const makePartialArrayMatcher =
+  <T>(pattern: T[]) =>
+  (arr: T[]) => {
+    if (arr.length === 0) {
+      return true;
+    }
 
-  return arr.every((n, i) => n === pattern[i]);
-};
+    return arr.every((n, i) => n === pattern[i]);
+  };
 
-export const makeMatcher = (pattern: number[], trigger: () => void) => {
+export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
   const buffer = new Array(LOOKAHEAD + LOOKBEHIND).fill(-1);
   const isMatch = makeArrayMatcher(pattern);
   const isPartialMatch = makePartialArrayMatcher(pattern);
-  let patternSoFar: number[] = [];
+  let patternSoFar: T[] = [];
 
-  return (frequency: number) => {
-    buffer.push(frequency);
+  return (entry: T) => {
+    buffer.push(entry);
     buffer.shift();
 
     const nextEntry = modeFast(buffer);
