@@ -2,19 +2,40 @@ import { mergeMap, Observable } from "rxjs";
 import { FrequencyToNoteConverter } from "./note";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
+function findLoudest(sample: Uint8Array) {
+  let loudestBinSoFar = -1;
+  let loudestSoFar = 0;
+
+  for (let i = 0; i <= sample.length; i++) {
+    const loudness = sample[i];
+    if (loudness > loudestSoFar) {
+      loudestSoFar = loudness;
+      loudestBinSoFar = i;
+    }
+    if (loudness === 255) {
+      break;
+    }
+  }
+
+  if (loudestSoFar === 0) {
+    return null;
+  }
+
+  return { loudness: loudestSoFar, bin: loudestBinSoFar };
+}
+
 export type OctaviousOptions = {
   fftSize: number;
-  minLoudness: number;
   referencePitchHz: number;
   smoothingConstant: number;
 };
 
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
-const DEFAULT_MIN_LOUDNESS = 64;
 const DEFAULT_SMOOTHING_CONSTANT = 0.8;
 
 export type NoteDescriptor = {
   frequency: number;
+  loudness: number;
   number: number;
   name: string;
   octave: number;
@@ -25,7 +46,6 @@ export function fromAudioSource(
   audioSource: AudioNode,
   {
     fftSize = DEFAULT_FFT_SIZE,
-    minLoudness = DEFAULT_MIN_LOUDNESS,
     referencePitchHz = DefaultReferencePitchHz,
     smoothingConstant = DEFAULT_SMOOTHING_CONSTANT,
   }: Partial<OctaviousOptions> = {}
@@ -49,23 +69,15 @@ export function fromAudioSource(
     const run = () => {
       analyzer.getByteFrequencyData(analyserSample);
 
-      const loudestBin = analyserSample.reduce(
-        (loudestBinSoFar: number, loudness, i, sample) => {
-          const loudestSoFar = sample[loudestBinSoFar] || 0;
-          if (loudness > minLoudness && loudness > loudestSoFar) {
-            return i;
-          }
-          return loudestBinSoFar;
-        },
-        -1
-      );
+      const loudest = findLoudest(analyserSample);
 
-      if (loudestBin === -1) {
+      if (!loudest) {
         subscriber.next(null);
       } else {
-        const currentFrequency = frequencyByBin[loudestBin];
+        const currentFrequency = frequencyByBin[loudest.bin];
         subscriber.next({
           frequency: currentFrequency,
+          loudness: loudest.loudness,
           number: toNote.number(currentFrequency),
           name: toNote.name(currentFrequency),
           octave: toNote.octave(currentFrequency),

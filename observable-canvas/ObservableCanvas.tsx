@@ -2,13 +2,15 @@ import { entries } from "lodash";
 import React, { HTMLAttributes, useEffect, useMemo, useRef } from "react";
 import { Observable } from "rxjs";
 
+export type ObservableCanvasDrawProp<T> = (opts: {
+  context: CanvasRenderingContext2D;
+  rect: DOMRect;
+  value: T;
+}) => void;
+
 type PropTypes<T> = {
   $value: Observable<T>;
-  draw: (opts: {
-    context: CanvasRenderingContext2D;
-    rect: DOMRect;
-    value: T;
-  }) => void;
+  draw: ObservableCanvasDrawProp<T>;
 };
 
 export function ObservableCanvas<I = number>({
