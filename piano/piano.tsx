@@ -1,7 +1,5 @@
 import { range } from "lodash";
-import { fromAudioSource, fromMicrophone } from "../octavious/octavious";
-import { modeFast } from "simple-statistics";
-import { NoteNames } from "../octavious/note";
+import { fromMicrophone, NoteNames } from "../octavious";
 
 const FFT_SIZE = Math.pow(2, 15);
 const MIN_LOUDNESS = 64;
