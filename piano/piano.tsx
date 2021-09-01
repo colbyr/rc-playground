@@ -1,7 +1,7 @@
 import { range } from "lodash";
 import { fromAudioSource, fromMicrophone } from "../octavious/octavious";
 import { modeFast } from "simple-statistics";
-import { NoteNames } from "../octavious/notes";
+import { NoteNames } from "../octavious/note";
 
 const FFT_SIZE = Math.pow(2, 15);
 const MIN_LOUDNESS = 64;
@@ -121,45 +121,41 @@ function drawKeys(canvasContext: CanvasRenderingContext2D) {
 drawKeys(canvasContext);
 
 function startListening() {
-  fromMicrophone().subscribe(
-    (note) => {
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const whiteKeyWidth = canvasWidth / whiteKeys;
-      const blackKeyWidth = whiteKeyWidth / GR;
+  fromMicrophone().subscribe((note) => {
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const whiteKeyWidth = canvasWidth / whiteKeys;
+    const blackKeyWidth = whiteKeyWidth / GR;
 
-      drawKeys(canvasContext);
+    drawKeys(canvasContext);
 
-      numberEl.innerHTML = `${note.number}`;
-      noteEl.innerHTML = note.name;
-      octaveEl.innerHTML = `${note.octave}`;
-      frequencyEl.innerHTML = `${note.frequency}`;
+    numberEl.innerHTML = `${note.number}`;
+    noteEl.innerHTML = note.name;
+    octaveEl.innerHTML = `${note.octave}`;
+    frequencyEl.innerHTML = `${note.frequency}`;
 
-      const keyI = note.number - 9;
-      const offset = offsets[keyI];
-      if (note.name.length === 1) {
-        const indicatorWidth = whiteKeyWidth / GR;
-        canvasContext.fillStyle = "#FF0000";
-        canvasContext.fillRect(
-          offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
-          canvasHeight / GR,
-          indicatorWidth,
-          indicatorWidth * GR
-        );
-      } else {
-        const indicatorWidth = blackKeyWidth / GR;
-        canvasContext.fillStyle = "#FF0000";
-        canvasContext.fillRect(
-          (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
-          canvasHeight / 2 / GR,
-          indicatorWidth,
-          indicatorWidth * GR
-        );
-      }
-    },
-    (err) => console.error(err),
-    () => console.info("done!")
-  );
+    const keyI = note.number - 9;
+    const offset = offsets[keyI];
+    if (note.name.length === 1) {
+      const indicatorWidth = whiteKeyWidth / GR;
+      canvasContext.fillStyle = "#FF0000";
+      canvasContext.fillRect(
+        offset * whiteKeyWidth + (whiteKeyWidth - indicatorWidth) / 2,
+        canvasHeight / GR,
+        indicatorWidth,
+        indicatorWidth * GR
+      );
+    } else {
+      const indicatorWidth = blackKeyWidth / GR;
+      canvasContext.fillStyle = "#FF0000";
+      canvasContext.fillRect(
+        (offset + 1) * whiteKeyWidth - indicatorWidth / 2,
+        canvasHeight / 2 / GR,
+        indicatorWidth,
+        indicatorWidth * GR
+      );
+    }
+  });
 }
 
 export {};

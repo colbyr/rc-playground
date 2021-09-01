@@ -1,7 +1,7 @@
-import { range } from "lodash";
-import { first, mergeMap, from, map, Observable } from "rxjs";
-import { NoteNames } from "./notes";
+import { mergeMap, Observable } from "rxjs";
+import { FrequencyToNoteConverter } from "./note";
 import { makeRollingMode } from "./smoothing";
+import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
 type OctaviousOptions = {
   bufferSize: number;
@@ -14,7 +14,6 @@ type OctaviousOptions = {
 const DEFAULT_BUFFER_SIZE = 1;
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
 const DEFAULT_MIN_LOUDNESS = 64;
-const DEFAULT_REFERENCE_PITCH = 441;
 const DEFAULT_SMOOTHING_CONSTANT = 0.8;
 
 type NoteDescriptor = {
@@ -30,7 +29,7 @@ export function fromAudioSource(
     bufferSize = DEFAULT_BUFFER_SIZE,
     fftSize = DEFAULT_FFT_SIZE,
     minLoudness = DEFAULT_MIN_LOUDNESS,
-    referencePitchHz = DEFAULT_REFERENCE_PITCH,
+    referencePitchHz = DefaultReferencePitchHz,
     smoothingConstant = DEFAULT_SMOOTHING_CONSTANT,
   }: Partial<OctaviousOptions> = {}
 ): Observable<NoteDescriptor> {
@@ -39,18 +38,16 @@ export function fromAudioSource(
   analyzer.smoothingTimeConstant = smoothingConstant;
   audioSource.connect(analyzer);
 
-  const freqSampleRateHz = audioSource.context.sampleRate;
-  const freqCount = analyzer.frequencyBinCount;
-  const freqMaxHz = freqSampleRateHz / 2;
-  const freqStepHz = freqMaxHz / freqCount;
-  const freqRange = range(0, freqCount).map(
-    (n) => n * freqStepHz + freqStepHz / 2
+  const frequencyBinCount = analyzer.frequencyBinCount;
+  const frequencyByBin = getFrequenciesByBin(
+    audioSource.context.sampleRate,
+    analyzer.frequencyBinCount
   );
-  const c0Hz = referencePitchHz * Math.pow(2, -4.75);
-  const analyserSample = new Uint8Array(freqCount);
+  const analyserSample = new Uint8Array(frequencyBinCount);
   const smoothFrequency = makeRollingMode({ bufferSize, defaultValue: -1 });
 
   return new Observable((subscriber) => {
+    const toNote = new FrequencyToNoteConverter(referencePitchHz);
     let nextFrameId: number;
 
     const run = () => {
@@ -66,22 +63,14 @@ export function fromAudioSource(
         0
       );
 
-      const frequency = freqRange[loudestBin];
-      const noteNumber = smoothFrequency(
-        Math.round(12 * Math.log2(frequency / c0Hz))
-      );
-
-      if (frequency && noteNumber > 0) {
-        const octave = Math.floor(noteNumber / 12);
-        const noteI = noteNumber % 12;
-        const noteName = NoteNames[noteI];
-        subscriber.next({
-          frequency,
-          number: noteNumber,
-          name: noteName,
-          octave,
-        });
-      }
+      const currentSampledFrequency = frequencyByBin[loudestBin];
+      const smoothedFrequency = smoothFrequency(currentSampledFrequency);
+      subscriber.next({
+        frequency: smoothedFrequency,
+        number: toNote.number(smoothedFrequency),
+        name: toNote.name(smoothedFrequency),
+        octave: toNote.octave(smoothedFrequency),
+      });
 
       nextFrameId = requestAnimationFrame(run);
     };
