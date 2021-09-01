@@ -64,7 +64,7 @@ export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
     const isNewEntry = nextEntry !== prevEntry;
     if (isNewEntry) {
       patternSoFar.push(nextEntry);
-      nextEntry !== -1 && console.info("👂", nextEntry);
+      console.info("👂", nextEntry);
     }
 
     if (patternSoFar.length > pattern.length) {

@@ -1,5 +1,5 @@
 import { mergeMap, Observable } from "rxjs";
-import { FrequencyToNoteConverter } from "./note";
+import { FrequencyToNoteConverter, NoteName } from "./note";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
 function findLoudest(sample: Uint8Array) {
@@ -37,7 +37,7 @@ export type NoteDescriptor = {
   frequency: number;
   loudness: number;
   number: number;
-  name: string;
+  name: NoteName;
   octave: number;
   timestamp: number;
 };

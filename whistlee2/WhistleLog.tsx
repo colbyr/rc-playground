@@ -1,16 +1,14 @@
 import React, { useMemo } from "react";
 import { Observable } from "rxjs";
-import { fromMicrophone, makeRollingMode, NoteDescriptor } from "../octavious";
+import { fromMicrophone, NoteDescriptor } from "../octavious";
 import {
   ObservableCanvas,
   ObservableCanvasDrawProp,
 } from "../observable-canvas/ObservableCanvas";
-import { makeMatcher } from "../whistlee/melody";
+import { makeRelativeMelodyMatcher } from "../octavious";
+import { setHueLightState } from "../whistlee/HueApi";
 
-const smoothNoteNumber = makeRollingMode<number | null>({
-  defaultValue: null,
-  bufferSize: 16,
-});
+const LIGHT_ID = 1;
 
 let subsequent: number[] = [];
 const getSubsequent = (n: number) => {
@@ -23,8 +21,22 @@ const getSubsequent = (n: number) => {
 };
 
 const matchers = [
-  makeMatcher(["c♯", "g♯", "c♯"], () => console.info("lights off 😴")),
-  makeMatcher(["c♯", "g♯", "c♯"], () => console.info("lights on 💡")),
+  // makeMatcher(["c♯", "g♯", "c♯"], () => console.info("lights off 😴")),
+  // makeMatcher(["c♯", "g♯", "c♯"], () => console.info("lights on 💡")),
+  makeRelativeMelodyMatcher({
+    pattern: ["c", "e", "g"],
+    trigger: () => {
+      console.info("lights on 💡");
+      setHueLightState(LIGHT_ID, { on: true, bri: 254 });
+    },
+  }),
+  makeRelativeMelodyMatcher({
+    pattern: ["c", "e", "c"],
+    trigger: () => {
+      console.info("lights off 😴");
+      setHueLightState(LIGHT_ID, { on: false });
+    },
+  }),
 ];
 
 type Value = NoteDescriptor | null;
@@ -66,10 +78,7 @@ const drawBackground: ObservableCanvasDrawProp<Value> = ({
 };
 
 export const WhistleLog = () => {
-  const $micInput: Observable<Value> = useMemo(
-    () => fromMicrophone({ smoothingConstant: 0 }),
-    []
-  );
+  const $micInput: Observable<Value> = useMemo(() => fromMicrophone(), []);
 
   return (
     <>
@@ -84,10 +93,16 @@ export const WhistleLog = () => {
       >
         <h1 style={{ margin: "0 0 0.5rem 0" }}>Whistlee mk. 2</h1>
         <ObservableCanvas
-          draw={(opts) => {
-            drawBackground(opts);
-            const noteName = opts.value?.name;
-            matchers.forEach((m) => m(noteName));
+          draw={({ value: note, ...opts }) => {
+            if (!note || note.loudness < 128) {
+              drawBackground({ ...opts, value: null });
+              matchers.forEach((m) => m(null));
+              return;
+            }
+
+            drawBackground({ ...opts, value: note });
+            const logNumber = note && note.loudness > 128 ? note.number : null;
+            matchers.forEach((m) => m(logNumber));
           }}
           $value={$micInput}
           style={{

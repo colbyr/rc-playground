@@ -1,6 +1,45 @@
 import { DefaultReferencePitchHz } from "./frequency";
 
-export const NoteNames = [
+export type NoteName =
+  | "c"
+  | "c♯"
+  | "d♭"
+  | "d"
+  | "d♯"
+  | "e♭"
+  | "e"
+  | "f"
+  | "f♯"
+  | "g♭"
+  | "g"
+  | "g♯"
+  | "a♭"
+  | "a"
+  | "a♯"
+  | "b♭"
+  | "b";
+
+export const NoteNumberByName: Record<NoteName, number> = {
+  c: 0,
+  "c♯": 1,
+  "d♭": 1,
+  d: 2,
+  "d♯": 3,
+  "e♭": 3,
+  e: 4,
+  f: 5,
+  "f♯": 6,
+  "g♭": 6,
+  g: 7,
+  "g♯": 8,
+  "a♭": 8,
+  a: 9,
+  "a♯": 10,
+  "b♭": 10,
+  b: 11,
+};
+
+export const NoteNames: NoteName[] = [
   "c", // 0
   "c♯", // 1
   "d",
