@@ -26,14 +26,14 @@ const matchers = [
   makeRelativeMelodyMatcher({
     pattern: ["c", "e", "g"],
     trigger: () => {
-      console.info("lights on 💡");
+      window.alert("lights on 💡");
       setHueLightState(LIGHT_ID, { on: true, bri: 254 });
     },
   }),
   makeRelativeMelodyMatcher({
     pattern: ["c", "e", "c"],
     trigger: () => {
-      console.info("lights off 😴");
+      window.alert("lights off 😴");
       setHueLightState(LIGHT_ID, { on: false });
     },
   }),
@@ -91,7 +91,7 @@ export const WhistleLog = () => {
           padding: "1rem",
         }}
       >
-        <h1 style={{ margin: "0 0 0.5rem 0" }}>Whistlee mk. 2</h1>
+        <h1 style={{ margin: "0 0 0.5rem 0" }}>Whistlee MK2</h1>
         <ObservableCanvas
           draw={({ value: note, ...opts }) => {
             if (!note || note.loudness < 128) {
