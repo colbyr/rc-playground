@@ -122,7 +122,7 @@ drawKeys(canvasContext);
 
 function startListening() {
   fromMicrophone().subscribe(
-    ({ frequency, num, name, octave }) => {
+    (note) => {
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
       const whiteKeyWidth = canvasWidth / whiteKeys;
@@ -130,14 +130,14 @@ function startListening() {
 
       drawKeys(canvasContext);
 
-      numberEl.innerHTML = `${num}`;
-      noteEl.innerHTML = name;
-      octaveEl.innerHTML = `${octave}`;
-      frequencyEl.innerHTML = `${frequency}`;
+      numberEl.innerHTML = `${note.number}`;
+      noteEl.innerHTML = note.name;
+      octaveEl.innerHTML = `${note.octave}`;
+      frequencyEl.innerHTML = `${note.frequency}`;
 
-      const keyI = num - 9;
+      const keyI = note.number - 9;
       const offset = offsets[keyI];
-      if (name.length === 1) {
+      if (note.name.length === 1) {
         const indicatorWidth = whiteKeyWidth / GR;
         canvasContext.fillStyle = "#FF0000";
         canvasContext.fillRect(

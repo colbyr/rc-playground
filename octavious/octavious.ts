@@ -1,7 +1,7 @@
 import { range } from "lodash";
-import { first, flatMap, from, map, Observable } from "rxjs";
-import { modeFast } from "simple-statistics";
+import { first, mergeMap, from, map, Observable } from "rxjs";
 import { NoteNames } from "./notes";
+import { makeRollingMode } from "./smoothing";
 
 type OctaviousOptions = {
   bufferSize: number;
@@ -17,18 +17,9 @@ const DEFAULT_MIN_LOUDNESS = 64;
 const DEFAULT_REFERENCE_PITCH = 441;
 const DEFAULT_SMOOTHING_CONSTANT = 0.8;
 
-const makeSmoother = (bufferSize: number) => {
-  const buffer = new Array(bufferSize).fill(-1);
-  return (frequency: number) => {
-    buffer.push(frequency);
-    buffer.shift();
-    return modeFast(buffer);
-  };
-};
-
 type NoteDescriptor = {
   frequency: number;
-  num: number;
+  number: number;
   name: string;
   octave: number;
 };
@@ -57,22 +48,9 @@ export function fromAudioSource(
   );
   const c0Hz = referencePitchHz * Math.pow(2, -4.75);
   const analyserSample = new Uint8Array(freqCount);
-  const smoothFreq = makeSmoother(bufferSize);
+  const smoothFrequency = makeRollingMode({ bufferSize, defaultValue: -1 });
 
   return new Observable((subscriber) => {
-    console.info({
-      freqRange,
-    });
-
-    console.table([
-      {
-        freqSampleRateHz,
-        freqCount,
-        freqMaxHz,
-        freqStepHz,
-      },
-    ]);
-
     let nextFrameId: number;
 
     const run = () => {
@@ -89,7 +67,7 @@ export function fromAudioSource(
       );
 
       const frequency = freqRange[loudestBin];
-      const noteNumber = smoothFreq(
+      const noteNumber = smoothFrequency(
         Math.round(12 * Math.log2(frequency / c0Hz))
       );
 
@@ -97,7 +75,12 @@ export function fromAudioSource(
         const octave = Math.floor(noteNumber / 12);
         const noteI = noteNumber % 12;
         const noteName = NoteNames[noteI];
-        subscriber.next({ frequency, num: noteNumber, name: noteName, octave });
+        subscriber.next({
+          frequency,
+          number: noteNumber,
+          name: noteName,
+          octave,
+        });
       }
 
       nextFrameId = requestAnimationFrame(run);
@@ -109,7 +92,7 @@ export function fromAudioSource(
   });
 }
 
-export function fromMicrophone() {
+export function fromMicrophone(opts?: Partial<OctaviousOptions>) {
   return new Observable<MediaStream>((subscribe) => {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
@@ -118,14 +101,14 @@ export function fromMicrophone() {
       })
       .finally(() => subscribe.complete());
   }).pipe(
-    flatMap((micStream) => {
+    mergeMap((micStream) => {
       const audioContext = new AudioContext({
         latencyHint: "interactive",
       });
 
       const source: MediaStreamAudioSourceNode =
         audioContext.createMediaStreamSource(micStream);
-      return fromAudioSource(source);
+      return fromAudioSource(source, opts);
     })
   );
 }
