@@ -1,6 +1,22 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { fromMicrophone, makeRollingMode, NoteDescriptor } from "../octavious";
+
+const smoothNoteNumber = makeRollingMode({ defaultValue: -1, bufferSize: 16 });
 
 export const WhistleLog = () => {
+  const [noteLog, setNoteLog] = useState<NoteDescriptor[]>([]);
+
+  useEffect(() => {
+    fromMicrophone().subscribe((nextNote) => {
+      setNoteLog((prevLog) => {
+        if (prevLog[0]?.number === nextNote.number) {
+          return prevLog;
+        }
+        return [nextNote, ...prevLog].slice(0, 55);
+      });
+    });
+  }, []);
+
   return (
     <main
       style={{
@@ -19,7 +35,9 @@ export const WhistleLog = () => {
           flexGrow: 1,
           padding: "0.5rem",
         }}
-      />
+      >
+        {noteLog.map((note) => `${note.name}`).join("\n")}
+      </pre>
     </main>
   );
 };

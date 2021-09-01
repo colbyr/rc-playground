@@ -1,9 +1,8 @@
 import { mergeMap, Observable } from "rxjs";
 import { FrequencyToNoteConverter } from "./note";
-import { makeRollingMode } from "./smoothing";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
-type OctaviousOptions = {
+export type OctaviousOptions = {
   bufferSize: number;
   fftSize: number;
   minLoudness: number;
@@ -16,11 +15,12 @@ const DEFAULT_FFT_SIZE = Math.pow(2, 15);
 const DEFAULT_MIN_LOUDNESS = 64;
 const DEFAULT_SMOOTHING_CONSTANT = 0.8;
 
-type NoteDescriptor = {
+export type NoteDescriptor = {
   frequency: number;
   number: number;
   name: string;
   octave: number;
+  timestamp: number;
 };
 
 export function fromAudioSource(
@@ -44,7 +44,7 @@ export function fromAudioSource(
     analyzer.frequencyBinCount
   );
   const analyserSample = new Uint8Array(frequencyBinCount);
-  const smoothFrequency = makeRollingMode({ bufferSize, defaultValue: -1 });
+  // const smoothFrequency = makeRollingMode({ bufferSize, defaultValue: -1 });
 
   return new Observable((subscriber) => {
     const toNote = new FrequencyToNoteConverter(referencePitchHz);
@@ -63,13 +63,13 @@ export function fromAudioSource(
         0
       );
 
-      const currentSampledFrequency = frequencyByBin[loudestBin];
-      const smoothedFrequency = smoothFrequency(currentSampledFrequency);
+      const currentFrequency = frequencyByBin[loudestBin];
       subscriber.next({
-        frequency: smoothedFrequency,
-        number: toNote.number(smoothedFrequency),
-        name: toNote.name(smoothedFrequency),
-        octave: toNote.octave(smoothedFrequency),
+        frequency: currentFrequency,
+        number: toNote.number(currentFrequency),
+        name: toNote.name(currentFrequency),
+        octave: toNote.octave(currentFrequency),
+        timestamp: Date.now(),
       });
 
       nextFrameId = requestAnimationFrame(run);
