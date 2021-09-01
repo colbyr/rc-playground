@@ -127,6 +127,10 @@ function startListening() {
 
     drawKeys(canvasContext);
 
+    if (!note) {
+      return;
+    }
+
     numberEl.innerHTML = `${note.number}`;
     noteEl.innerHTML = note.name;
     octaveEl.innerHTML = `${note.octave}`;

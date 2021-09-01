@@ -3,14 +3,12 @@ import { FrequencyToNoteConverter } from "./note";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
 export type OctaviousOptions = {
-  bufferSize: number;
   fftSize: number;
   minLoudness: number;
   referencePitchHz: number;
   smoothingConstant: number;
 };
 
-const DEFAULT_BUFFER_SIZE = 1;
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
 const DEFAULT_MIN_LOUDNESS = 64;
 const DEFAULT_SMOOTHING_CONSTANT = 0.8;
@@ -26,13 +24,12 @@ export type NoteDescriptor = {
 export function fromAudioSource(
   audioSource: AudioNode,
   {
-    bufferSize = DEFAULT_BUFFER_SIZE,
     fftSize = DEFAULT_FFT_SIZE,
     minLoudness = DEFAULT_MIN_LOUDNESS,
     referencePitchHz = DefaultReferencePitchHz,
     smoothingConstant = DEFAULT_SMOOTHING_CONSTANT,
   }: Partial<OctaviousOptions> = {}
-): Observable<NoteDescriptor> {
+): Observable<NoteDescriptor | null> {
   const analyzer = audioSource.context.createAnalyser();
   analyzer.fftSize = fftSize;
   analyzer.smoothingTimeConstant = smoothingConstant;
@@ -44,7 +41,6 @@ export function fromAudioSource(
     analyzer.frequencyBinCount
   );
   const analyserSample = new Uint8Array(frequencyBinCount);
-  // const smoothFrequency = makeRollingMode({ bufferSize, defaultValue: -1 });
 
   return new Observable((subscriber) => {
     const toNote = new FrequencyToNoteConverter(referencePitchHz);
@@ -55,22 +51,27 @@ export function fromAudioSource(
 
       const loudestBin = analyserSample.reduce(
         (loudestBinSoFar: number, loudness, i, sample) => {
-          if (loudness > minLoudness && loudness > sample[loudestBinSoFar]) {
+          const loudestSoFar = sample[loudestBinSoFar] || 0;
+          if (loudness > minLoudness && loudness > loudestSoFar) {
             return i;
           }
           return loudestBinSoFar;
         },
-        0
+        -1
       );
 
-      const currentFrequency = frequencyByBin[loudestBin];
-      subscriber.next({
-        frequency: currentFrequency,
-        number: toNote.number(currentFrequency),
-        name: toNote.name(currentFrequency),
-        octave: toNote.octave(currentFrequency),
-        timestamp: Date.now(),
-      });
+      if (loudestBin === -1) {
+        subscriber.next(null);
+      } else {
+        const currentFrequency = frequencyByBin[loudestBin];
+        subscriber.next({
+          frequency: currentFrequency,
+          number: toNote.number(currentFrequency),
+          name: toNote.name(currentFrequency),
+          octave: toNote.octave(currentFrequency),
+          timestamp: Date.now(),
+        });
+      }
 
       nextFrameId = requestAnimationFrame(run);
     };

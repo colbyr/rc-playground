@@ -9,7 +9,7 @@ export const WhistleLog = () => {
   useEffect(() => {
     fromMicrophone().subscribe((nextNote) => {
       setNoteLog((prevLog) => {
-        if (prevLog[0]?.number === nextNote.number) {
+        if (!nextNote || prevLog[0]?.number === nextNote.number) {
           return prevLog;
         }
         return [nextNote, ...prevLog].slice(0, 55);
