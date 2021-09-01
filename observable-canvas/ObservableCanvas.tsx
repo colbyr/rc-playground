@@ -33,24 +33,27 @@ export function ObservableCanvas<I = number>({
     return () => resize.disconnect();
   }, [canvasRef]);
 
-  useEffect(() => {
-    const canvasElement = canvasRef.current;
-    if (!canvasElement) {
-      return;
-    }
-    const context = canvasElement.getContext("2d")!;
-    console.info("start", { canvasElement, context });
-    const subscription = $value.subscribe({
-      next: (value) => {
-        draw({ value, context, rect: canvasElement.getBoundingClientRect() });
-      },
-      error: (error) => {
-        console.error("ObservableCanvas", error);
-        subscription.unsubscribe();
-      },
-    });
-    return () => subscription.unsubscribe();
-  }, [$value]);
+  useEffect(
+    () => {
+      const canvasElement = canvasRef.current;
+      if (!canvasElement) {
+        return;
+      }
+      const context = canvasElement.getContext("2d")!;
+      const subscription = $value.subscribe({
+        next: (value) => {
+          draw({ value, context, rect: canvasElement.getBoundingClientRect() });
+        },
+        error: (error) => {
+          console.error("ObservableCanvas", error);
+          subscription.unsubscribe();
+        },
+      });
+      return () => subscription.unsubscribe();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [$value]
+  );
 
   return <canvas {...props} ref={canvasRef} />;
 }

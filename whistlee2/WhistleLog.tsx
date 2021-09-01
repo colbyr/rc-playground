@@ -21,8 +21,8 @@ export const WhistleLog = () => {
         <h1 style={{ margin: "0 0 0.5rem 0" }}>Whistlee mk. 2</h1>
         <ObservableCanvas
           draw={({ context, rect, value: note }) => {
-            context.fillStyle = "white";
-            context.fillRect(0, 0, rect.width, rect.height);
+            // context.fillStyle = "white";
+            // context.fillRect(0, 0, rect.width, rect.height);
 
             if (!note) {
               return;
@@ -31,13 +31,18 @@ export const WhistleLog = () => {
             const { number } = note;
             const pitchNumber = number % 12;
             const hue = Math.abs((pitchNumber / 12) * 360 - 360);
-            context.fillStyle = `hsl(${hue}, 100%, 50%)`;
-            context.fillRect(
-              rect.width / 2 - 50,
-              rect.height / 2 - 50,
+            const gradient = context.createRadialGradient(
+              rect.width / 2,
+              rect.height / 2,
               100,
-              100
+              rect.width / 2,
+              rect.height / 2,
+              Math.min(rect.height, rect.width)
             );
+            gradient.addColorStop(0, `hsl(${hue}, 100%, 50%)`);
+            gradient.addColorStop(1, "#FFF");
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, rect.width, rect.height);
           }}
           $value={$micInput}
           style={{
