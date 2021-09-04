@@ -26,14 +26,12 @@ const matchers = [
   makeRelativeMelodyMatcher({
     pattern: ["c", "e", "g"],
     trigger: () => {
-      window.alert("lights on 💡");
       setHueLightState(LIGHT_ID, { on: true, bri: 254 });
     },
   }),
   makeRelativeMelodyMatcher({
     pattern: ["c", "e", "c"],
     trigger: () => {
-      window.alert("lights off 😴");
       setHueLightState(LIGHT_ID, { on: false });
     },
   }),
