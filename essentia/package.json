@@ -1,0 +1,11 @@
+{
+  "name": "essentia",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Colby Rabideau<me@colbyr.com>",
+  "license": "MIT",
+  "dependencies": {
+    "essentia.js": "^0.1.3",
+    "mic": "^2.1.2"
+  }
+}
