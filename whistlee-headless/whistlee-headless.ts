@@ -1,7 +1,7 @@
 import { fromMicrophone, makeRelativeMelodyMatcher } from "../octavious";
 import { setHueLightState } from "../whistlee/HueApi";
 
-const LIGHT_ID = 2;
+const LIGHT_ID = 1;
 
 const matchers = [
   makeRelativeMelodyMatcher({
