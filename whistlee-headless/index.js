@@ -1,7 +1,11 @@
 const puppeteer = require("puppeteer");
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    dumpio: true,
+    headless: true,
+    args: ["--use-fake-ui-for-media-stream"],
+  });
   const context = browser.defaultBrowserContext();
   try {
     await context.overridePermissions("http://localhost:3000", ["microphone"]);
