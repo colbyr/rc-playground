@@ -13,6 +13,8 @@ const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless/`;
   await context.overridePermissions(HEADLESS_URL, ["microphone"]);
 
   const [page] = await browser.pages();
-  page.on("console", (msg) => console.log(msg.text()));
+  page.on("console", (msg) =>
+    console.log(new Date().toISOString(), "|", msg.text())
+  );
   await page.goto(HEADLESS_URL);
 })();
