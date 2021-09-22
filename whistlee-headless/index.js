@@ -2,8 +2,8 @@ const puppeteer = require("puppeteer");
 
 (async () => {
   const browser = await puppeteer.launch({
-    dumpio: true,
     headless: true,
+    executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined,
     args: ["--use-fake-ui-for-media-stream"],
   });
   const context = browser.defaultBrowserContext();
