@@ -41,7 +41,6 @@ getMicrophoneSource()
       return source.connect(filter);
     }),
     mergeMap((source) => {
-      let nextFrame = null;
       const requestFrame = (frame: FrameRequestCallback): any => {
         return setTimeout(frame, 1);
       };
