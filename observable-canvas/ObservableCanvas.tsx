@@ -1,11 +1,18 @@
 import { entries } from "lodash";
-import React, { HTMLAttributes, useEffect, useMemo, useRef } from "react";
+import React, {
+  CSSProperties,
+  HTMLAttributes,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { Observable } from "rxjs";
 
 export type ObservableCanvasDrawProp<T> = (opts: {
   context: CanvasRenderingContext2D;
   rect: DOMRect;
   value: T;
+  style: CSSProperties;
 }) => void;
 
 type PropTypes<T> = {
@@ -16,6 +23,7 @@ type PropTypes<T> = {
 export function ObservableCanvas<I = number>({
   draw,
   $value,
+  style = {},
   ...props
 }: PropTypes<I> & HTMLAttributes<HTMLCanvasElement>) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -44,7 +52,12 @@ export function ObservableCanvas<I = number>({
       const context = canvasElement.getContext("2d")!;
       const subscription = $value.subscribe({
         next: (value) => {
-          draw({ value, context, rect: canvasElement.getBoundingClientRect() });
+          draw({
+            value,
+            context,
+            rect: canvasElement.getBoundingClientRect(),
+            style,
+          });
         },
         error: (error) => {
           console.error("ObservableCanvas", error);

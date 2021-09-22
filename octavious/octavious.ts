@@ -1,4 +1,4 @@
-import { mergeMap, Observable } from "rxjs";
+import { from, map, mergeMap, Observable, share } from "rxjs";
 import { FrequencyToNoteConverter, NoteName } from "./note";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
@@ -94,7 +94,7 @@ export function fromAudioSource(
   });
 }
 
-export function fromMicrophone(opts?: Partial<OctaviousOptions>) {
+export function getMicrophoneStream(): Observable<MediaStream> {
   return new Observable<MediaStream>((subscribe) => {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
@@ -102,15 +102,27 @@ export function fromMicrophone(opts?: Partial<OctaviousOptions>) {
         subscribe.next(microphoneStream);
       })
       .finally(() => subscribe.complete());
-  }).pipe(
-    mergeMap((micStream) => {
+  });
+}
+
+export function getMicrophoneSource(): Observable<MediaStreamAudioSourceNode> {
+  return getMicrophoneStream().pipe(
+    map((micStream) => {
+      console.info("get mic source");
       const audioContext = new AudioContext({
         latencyHint: "interactive",
       });
 
-      const source: MediaStreamAudioSourceNode =
-        audioContext.createMediaStreamSource(micStream);
-      return fromAudioSource(source, opts);
-    })
+      const source = audioContext.createMediaStreamSource(micStream);
+      Observable;
+      return source;
+    }),
+    share()
+  );
+}
+
+export function fromMicrophone(opts?: Partial<OctaviousOptions>) {
+  return getMicrophoneSource().pipe(
+    mergeMap((source) => fromAudioSource(source, opts))
   );
 }
