@@ -14,7 +14,7 @@ const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless/`;
 
   const [page] = await browser.pages();
   page.on("console", (msg) =>
-    console.log(new Date().toISOString(), "|", msg.text())
+    console.log(new Date().toString(), "|", msg.text())
   );
   await page.goto(HEADLESS_URL);
 })();
