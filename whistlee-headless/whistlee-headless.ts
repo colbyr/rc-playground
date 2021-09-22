@@ -9,6 +9,9 @@ import { setHueLightState } from "../whistlee/HueApi";
 
 const LIGHT_ID = 1;
 
+const SMOOTHING_CONSTANT = 0.1;
+const MIN_LOUDNESS = 32;
+
 const matchers = [
   makeRelativeMelodyMatcher({
     pattern: ["c", "e", "g"],
@@ -38,12 +41,12 @@ getMicrophoneSource()
       return source.connect(filter);
     }),
     mergeMap((source) => {
-      return fromAudioSource(source, { smoothingConstant: 0.1 });
+      return fromAudioSource(source, { smoothingConstant: SMOOTHING_CONSTANT });
     }),
     share()
   )
   .subscribe((note) => {
-    if (!note || note.loudness < 128) {
+    if (!note || note.loudness < MIN_LOUDNESS) {
       matchers.forEach((m) => m(null));
       return;
     }
