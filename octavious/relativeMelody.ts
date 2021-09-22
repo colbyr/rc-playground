@@ -1,6 +1,38 @@
-import { makeMatcher } from "../whistlee/melody";
+import { makeArrayMatcher, makePartialArrayMatcher } from "../whistlee/melody";
 import { NoteName, NoteNumberByName } from "./note";
 import { makeRollingMode } from "./smoothing";
+
+export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
+  const isMatch = makeArrayMatcher(pattern);
+  const isPartialMatch = makePartialArrayMatcher(pattern);
+  let patternSoFar: T[] = [];
+
+  return (entry: T) => {
+    patternSoFar.push(entry);
+
+    if (patternSoFar.length > pattern.length) {
+      patternSoFar.shift();
+    }
+
+    if (isMatch(patternSoFar)) {
+      console.info("MATCH 😅", "=>", pattern.toString());
+      patternSoFar = [];
+      trigger();
+      return true;
+    }
+
+    while (patternSoFar.length > 1) {
+      if (isPartialMatch(patternSoFar)) {
+        console.info(pattern.toString(), "=>", patternSoFar.toString());
+        return false;
+      }
+
+      patternSoFar.shift();
+    }
+
+    return false;
+  };
+};
 
 const smoothNoteNumber = makeRollingMode<number | null>({
   defaultValue: null,
@@ -46,15 +78,16 @@ export const makeRelativeMelodyMatcher = ({
   const match = makeMatcher(relativePattern, trigger);
   let prevNote: number | null = null;
   let prevDiff = 0;
-  console.info(pattern, "=>", relativePattern);
+  console.info(pattern.toString(), "=>", relativePattern.toString());
   return (rawNote: number | null) => {
     const currentNote = smoothNoteNumber(rawNote);
     if (prevNote === currentNote) {
-      match(prevDiff);
+      // match(prevDiff);
       return;
     }
 
     const diff = diffNotes(prevNote, currentNote);
+    // console.info(prevNote, "=>", currentNote, "~", diff, "step");
     prevNote = currentNote;
     prevDiff = diff;
     match(diff);

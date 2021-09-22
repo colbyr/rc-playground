@@ -1,9 +1,7 @@
-const { spawn } = require("child_process");
-const path = require("path");
 const puppeteer = require("puppeteer");
 
 const HEADLESS_PORT = 6767;
-const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless`;
+const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless/`;
 
 (async () => {
   const browser = await puppeteer.launch({
@@ -17,6 +15,4 @@ const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless`;
   const [page] = await browser.pages();
   page.on("console", (msg) => console.log(msg.text()));
   await page.goto(HEADLESS_URL);
-
-  // await browser.close();
 })();

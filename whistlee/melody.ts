@@ -29,7 +29,7 @@ export const getMelodyShape = (freqs: number[]) => {
   }, []);
 };
 
-const makeArrayMatcher =
+export const makeArrayMatcher =
   <T>(pattern: T[]) =>
   (arr: T[]) => {
     if (pattern.length !== arr.length) {
@@ -39,7 +39,7 @@ const makeArrayMatcher =
     return arr.every((n, i) => n === pattern[i]);
   };
 
-const makePartialArrayMatcher =
+export const makePartialArrayMatcher =
   <T>(pattern: T[]) =>
   (arr: T[]) => {
     if (arr.length === 0) {
