@@ -28,6 +28,8 @@ export type OctaviousOptions = {
   fftSize: number;
   referencePitchHz: number;
   smoothingConstant: number;
+  cancelFrame: typeof cancelAnimationFrame;
+  requestFrame: typeof requestAnimationFrame;
 };
 
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
@@ -48,6 +50,8 @@ export function fromAudioSource(
     fftSize = DEFAULT_FFT_SIZE,
     referencePitchHz = DefaultReferencePitchHz,
     smoothingConstant = DEFAULT_SMOOTHING_CONSTANT,
+    cancelFrame = cancelAnimationFrame,
+    requestFrame = requestAnimationFrame,
   }: Partial<OctaviousOptions> = {}
 ): Observable<NoteDescriptor | null> {
   const analyzer = audioSource.context.createAnalyser();
@@ -85,12 +89,12 @@ export function fromAudioSource(
         });
       }
 
-      nextFrameId = requestAnimationFrame(run);
+      nextFrameId = requestFrame(run);
     };
 
     run();
 
-    return () => cancelAnimationFrame(nextFrameId);
+    return () => cancelFrame(nextFrameId);
   });
 }
 

@@ -41,7 +41,16 @@ getMicrophoneSource()
       return source.connect(filter);
     }),
     mergeMap((source) => {
-      return fromAudioSource(source, { smoothingConstant: SMOOTHING_CONSTANT });
+      let nextFrame = null;
+      const requestFrame = (frame: FrameRequestCallback): any => {
+        return setTimeout(frame, 1);
+      };
+      const cancelFrame = (frameId: any) => clearTimeout(frameId);
+      return fromAudioSource(source, {
+        smoothingConstant: SMOOTHING_CONSTANT,
+        cancelFrame,
+        requestFrame,
+      });
     }),
     share()
   )
