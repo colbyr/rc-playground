@@ -7,5 +7,6 @@
   "dependencies": {
     "chrome-remote-interface": "^0.31.0",
     "puppeteer": "^10.2.0"
-  }
+  },
+  "devDependencies": {}
 }

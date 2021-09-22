@@ -1,4 +1,9 @@
+const { spawn } = require("child_process");
+const path = require("path");
 const puppeteer = require("puppeteer");
+
+const HEADLESS_PORT = 6767;
+const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless`;
 
 (async () => {
   const browser = await puppeteer.launch({
@@ -7,15 +12,11 @@ const puppeteer = require("puppeteer");
     args: ["--use-fake-ui-for-media-stream"],
   });
   const context = browser.defaultBrowserContext();
-  try {
-    await context.overridePermissions("http://localhost:3000", ["microphone"]);
-  } catch (error) {
-    console.error("FAIL", error);
-    browser.close();
-  }
-  const page = await browser.newPage();
+  await context.overridePermissions(HEADLESS_URL, ["microphone"]);
+
+  const [page] = await browser.pages();
   page.on("console", (msg) => console.log(msg.text()));
-  await page.goto("http://localhost:3000/whistlee2/");
+  await page.goto(HEADLESS_URL);
 
   // await browser.close();
 })();
