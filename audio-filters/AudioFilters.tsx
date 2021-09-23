@@ -94,6 +94,10 @@ export const AudioFilters = () => {
       const p9999Y = (height * p9999) / 255;
       context.fillRect(0, height - p9999Y, width, 1);
 
+      const p99 = quantile(freqs.slice(0, 2048), 0.99);
+      const p99Y = (height * p99) / 255;
+      context.fillRect(0, height - p99Y, width, 1);
+
       const p90 = quantile(freqs.slice(0, 2048), 0.9);
       const p90Y = (height * p90) / 255;
       context.fillRect(0, height - p90Y, width, 1);
