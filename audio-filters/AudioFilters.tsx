@@ -1,19 +1,8 @@
-import {
-  combineLatest,
-  animationFrames,
-  map,
-  mergeMap,
-  share,
-  combineLatestWith,
-  Observable,
-} from "rxjs";
+import { animationFrames } from "rxjs";
 import React, { useCallback, useMemo } from "react";
-import {} from "module";
-import {
-  ObservableCanvas,
-  ObservableCanvasDrawProp,
-} from "../observable-canvas/ObservableCanvas";
-import { getMicrophoneSource } from "../octavious";
+import { ObservableCanvas } from "../observable-canvas/ObservableCanvas";
+import { getMicrophoneSource, makeSampler } from "../octavious";
+import { quantile } from "simple-statistics";
 
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
 const DEFAULT_SMOOTHING_CONSTANT = 0.1;
@@ -25,28 +14,6 @@ const styles = {
     flex: 1,
   },
 };
-
-function makeSampler(
-  $frames: Observable<any>,
-  $source: Observable<AudioNode>,
-  makeAnalyser: (source: AudioNode) => [AnalyserNode, Uint8Array]
-) {
-  return $frames.pipe(
-    combineLatestWith(
-      $source.pipe(
-        map((source): [AnalyserNode, Uint8Array] => {
-          return makeAnalyser(source);
-        }),
-        share()
-      )
-    ),
-    map(([_, [analyser, sample]]) => {
-      analyser.getByteFrequencyData(sample);
-      return sample;
-    }),
-    share()
-  );
-}
 
 export const AudioFilters = () => {
   const $frames = useMemo(() => animationFrames(), []);
@@ -122,6 +89,18 @@ export const AudioFilters = () => {
           height
         );
       }
+
+      const p9999 = quantile(freqs.slice(0, 2048), 0.9999);
+      const p9999Y = (height * p9999) / 255;
+      context.fillRect(0, height - p9999Y, width, 1);
+
+      const p90 = quantile(freqs.slice(0, 2048), 0.9);
+      const p90Y = (height * p90) / 255;
+      context.fillRect(0, height - p90Y, width, 1);
+
+      const p50 = quantile(freqs.slice(0, 2048), 0.5);
+      const p50Y = (height * p50) / 255;
+      context.fillRect(0, height - p50Y, width, 1);
     },
     []
   );

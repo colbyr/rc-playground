@@ -1,4 +1,11 @@
-import { from, map, mergeMap, Observable, share } from "rxjs";
+import {
+  combineLatestWith,
+  from,
+  map,
+  mergeMap,
+  Observable,
+  share,
+} from "rxjs";
 import { FrequencyToNoteConverter, NoteName } from "./note";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
@@ -96,6 +103,21 @@ export function fromAudioSource(
 
     return () => cancelFrame(nextFrameId);
   });
+}
+
+export function makeSampler(
+  $frames: Observable<any>,
+  $source: Observable<AudioNode>,
+  makeAnalyser: (source: AudioNode) => [AnalyserNode, Uint8Array]
+) {
+  return $frames.pipe(
+    combineLatestWith($source.pipe(map(makeAnalyser), share())),
+    map(([_, [analyser, sample]]) => {
+      analyser.getByteFrequencyData(sample);
+      return sample;
+    }),
+    share()
+  );
 }
 
 export function getMicrophoneStream(): Observable<MediaStream> {
