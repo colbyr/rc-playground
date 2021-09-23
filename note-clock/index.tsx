@@ -1,4 +1,4 @@
-import { FMSynth, Loop, Transport } from "tone";
+import { FMSynth, Loop, Volume, Transport } from "tone";
 const startButton = document.getElementById("start")!;
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -7,8 +7,11 @@ startButton.addEventListener("click", () => {
   console.info("start");
 
   const hoursSynth = new FMSynth().toDestination();
+  hoursSynth.volume.value = -25;
   const minutesSynth = new FMSynth().toDestination();
+  minutesSynth.volume.value = -25;
   const secondsSynth = new FMSynth().toDestination();
+  secondsSynth.volume.value = -25;
 
   new Loop((time) => {
     const hours = new Date().getHours();
