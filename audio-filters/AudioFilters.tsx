@@ -5,7 +5,7 @@ import { getMicrophoneSource, makeSampler } from "../octavious";
 import { quantile } from "simple-statistics";
 
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
-const DEFAULT_SMOOTHING_CONSTANT = 0.1;
+const DEFAULT_SMOOTHING_CONSTANT = 0;
 
 const styles = {
   canvas: {

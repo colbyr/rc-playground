@@ -9,7 +9,7 @@ import { setHueLightState } from "../whistlee/HueApi";
 
 const LIGHT_ID = 1;
 
-const SMOOTHING_CONSTANT = 0.1;
+const SMOOTHING_CONSTANT = 0;
 const MIN_LOUDNESS = 32;
 
 const matchers = [
