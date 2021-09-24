@@ -1,4 +1,4 @@
-import { modeFast } from "simple-statistics";
+import { modeFast, mean } from "simple-statistics";
 
 export const makeRollingMode = <I>({
   defaultValue,
@@ -12,5 +12,22 @@ export const makeRollingMode = <I>({
     buffer.push(item);
     buffer.shift();
     return modeFast(buffer);
+  };
+};
+
+export const makeRollingMean = ({
+  defaultValue,
+  bufferSize,
+}: {
+  defaultValue: number;
+  bufferSize: number;
+}) => {
+  const buffer: number[] = [];
+  return function rollingMode(item: number): number {
+    buffer.push(item);
+    if (buffer.length > bufferSize) {
+      buffer.shift();
+    }
+    return mean(buffer);
   };
 };
