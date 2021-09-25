@@ -6,7 +6,9 @@
   "license": "MIT",
   "dependencies": {
     "chrome-remote-interface": "^0.31.0",
+    "hap-nodejs": "^0.9.5",
     "puppeteer": "^10.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "type": "module"
 }

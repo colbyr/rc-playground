@@ -1,17 +1,17 @@
 import {
   findLoudest,
   FrequencyToNoteConverter,
-  fromAudioSource,
-  fromMicrophone,
   getFrequenciesByBin,
   getMicrophoneSource,
   makeRelativeMelodyMatcher,
   makeRollingMode,
   makeSampler,
+  NoteName,
 } from "../octavious";
-import { interval, map, mergeMap, share, timeInterval } from "rxjs";
+import { interval, map } from "rxjs";
 import { setHueLightState } from "../whistlee/HueApi";
 import { quantile } from "simple-statistics";
+import { Patterns, send } from "./comms";
 
 const LIGHT_ID = 1;
 
@@ -20,22 +20,14 @@ const MIN_LOUDNESS = 32;
 const DEFAULT_FFT_SIZE = Math.pow(2, 15);
 const DEFAULT_SMOOTHING_CONSTANT = 0;
 
-const matchers = [
+const matchers = (
+  Object.entries(Patterns) as unknown as [string, NoteName[]][]
+).map(([name, pattern]) =>
   makeRelativeMelodyMatcher({
-    pattern: ["c", "e", "g"],
-    trigger: () => {
-      setHueLightState(LIGHT_ID, { on: true, bri: 254 });
-      console.info("💡 turn on the lights!");
-    },
-  }),
-  makeRelativeMelodyMatcher({
-    pattern: ["g", "e", "c"],
-    trigger: () => {
-      setHueLightState(LIGHT_ID, { on: false });
-      console.info("💤 turn off the lights!");
-    },
-  }),
-];
+    pattern,
+    trigger: () => send(name),
+  })
+);
 
 const smoothNote = makeRollingMode<number>({
   defaultValue: 0,
