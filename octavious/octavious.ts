@@ -134,7 +134,6 @@ export function getMicrophoneStream(): Observable<MediaStream> {
 export function getMicrophoneSource(): Observable<MediaStreamAudioSourceNode> {
   return getMicrophoneStream().pipe(
     map((micStream) => {
-      console.info("get mic source");
       const audioContext = new AudioContext({
         latencyHint: "interactive",
       });

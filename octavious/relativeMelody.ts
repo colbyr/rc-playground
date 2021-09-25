@@ -15,7 +15,6 @@ export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
     }
 
     if (isMatch(patternSoFar)) {
-      console.info("MATCH 😅", "=>", pattern.toString());
       patternSoFar = [];
       trigger();
       return true;
@@ -23,7 +22,6 @@ export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
 
     while (patternSoFar.length > 1) {
       if (isPartialMatch(patternSoFar)) {
-        console.info(pattern.toString(), "=>", patternSoFar.toString());
         return false;
       }
 
@@ -78,7 +76,6 @@ export const makeRelativeMelodyMatcher = ({
   const match = makeMatcher(relativePattern, trigger);
   let prevNote: number | null = null;
   let prevDiff = 0;
-  console.info(pattern.toString(), "=>", relativePattern.toString());
   return (rawNote: number | null) => {
     const currentNote = smoothNoteNumber(rawNote);
     if (prevNote === currentNote) {
@@ -87,7 +84,6 @@ export const makeRelativeMelodyMatcher = ({
     }
 
     const diff = diffNotes(prevNote, currentNote);
-    // console.info(prevNote, "=>", currentNote, "~", diff, "step");
     prevNote = currentNote;
     prevDiff = diff;
     match(diff);

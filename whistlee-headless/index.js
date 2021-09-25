@@ -15,13 +15,13 @@ const whistleeUuid = uuid.generate(process.env.WHISTLEE_SWITCH_ID);
 const whistleeAccessory = new Accessory("Whistlee v0", whistleeUuid);
 
 const callbacks = Object.entries(Patterns).reduce(
-  (acc, [name, pattern], index) => {
+  (acc, [key, { name, pattern }], index) => {
     const switchService = new Service.StatelessProgrammableSwitch(
       `Whistlee ${name}`,
-      name
+      key
     );
 
-    switchService.getCharacteristic(Characteristic.Name).setValue(name);
+    switchService.getCharacteristic(Characteristic.Name).setValue(key);
 
     switchService
       .getCharacteristic(Characteristic.ServiceLabelIndex)
@@ -29,8 +29,8 @@ const callbacks = Object.entries(Patterns).reduce(
 
     whistleeAccessory.addService(switchService);
 
-    acc[name] = () => {
-      log(`trigger match for ${name} (${pattern.toString()})`);
+    acc[key] = () => {
+      log("match:", { name, pattern });
       switchService
         .getCharacteristic(Characteristic.ProgrammableSwitchEvent)
         .sendEventNotification(
@@ -68,9 +68,8 @@ const log = (...args) => console.log(new Date().toString(), "|", ...args);
     const message = receive(payload);
 
     if (message) {
-      const [name, pattern] = message;
-      log("match:", { name, pattern });
-      callbacks[name]();
+      const [key] = message;
+      callbacks[key]();
       return;
     }
 

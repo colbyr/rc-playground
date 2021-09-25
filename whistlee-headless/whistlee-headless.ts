@@ -21,11 +21,14 @@ const DEFAULT_FFT_SIZE = Math.pow(2, 15);
 const DEFAULT_SMOOTHING_CONSTANT = 0;
 
 const matchers = (
-  Object.entries(Patterns) as unknown as [string, NoteName[]][]
-).map(([name, pattern]) =>
+  Object.entries(Patterns) as unknown as [
+    string,
+    { name: string; pattern: NoteName[] }
+  ][]
+).map(([key, { name, pattern }]) =>
   makeRelativeMelodyMatcher({
     pattern,
-    trigger: () => send(name),
+    trigger: () => send(key),
   })
 );
 
