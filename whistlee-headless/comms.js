@@ -1,5 +1,6 @@
 export const Patterns = {
   one_three_five: ["c", "e", "g"],
+  five_three_one: ["g", "e", "c"],
 };
 
 const names = Object.keys(Patterns);
