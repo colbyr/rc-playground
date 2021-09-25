@@ -25,7 +25,7 @@ const callbacks = Object.entries(Patterns).reduce(
 
     switchService
       .getCharacteristic(Characteristic.ServiceLabelIndex)
-      .setValue(index);
+      .setValue(index + 1);
 
     whistleeAccessory.addService(switchService);
 
