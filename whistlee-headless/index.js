@@ -12,7 +12,7 @@ const HEADLESS_PORT = 6767;
 const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless/`;
 
 const whistleeUuid = uuid.generate(process.env.WHISTLEE_SWITCH_ID);
-const whistleeAccessory = new Accessory("Whitlee v0", whistleeUuid);
+const whistleeAccessory = new Accessory("Whistlee v0", whistleeUuid);
 
 const callbacks = Object.entries(Patterns).reduce(
   (acc, [name, pattern], index) => {
