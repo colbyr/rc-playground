@@ -71,8 +71,7 @@ makeSampler(interval(10), getMicrophoneSource(), (source) => {
         [0.99, 0.9999]
       );
       const diff = p9999 - p99;
-
-      if (diff < 16) {
+      if (diff < 16 || p99 < MIN_LOUDNESS) {
         return new Uint8Array(2048).fill(0);
       }
       return freqs.map((freqLevel) => {
