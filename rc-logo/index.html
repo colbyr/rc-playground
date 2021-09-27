@@ -86,7 +86,7 @@
       const rcLogoGenerator = rcLogoStep();
 
       function runLogoGenerator() {
-        if (rcLogoGenerator.next()) {
+        if (!rcLogoGenerator.next().done) {
           setTimeout(runLogoGenerator, 500);
         }
       }
