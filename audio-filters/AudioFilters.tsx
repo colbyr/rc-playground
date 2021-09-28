@@ -37,9 +37,8 @@ export const AudioFilters = () => {
       makeSampler($frames, $micSource, (source) => {
         const filter = new BiquadFilterNode(source.context, {
           type: "bandpass",
-          Q: 3,
-          frequency: 1024,
-          gain: 3,
+          Q: 0.4,
+          frequency: 1000,
         });
         const bandpass = source.connect(filter);
         const analyser = source.context.createAnalyser();
