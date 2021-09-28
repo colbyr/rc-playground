@@ -9,7 +9,7 @@ import {
 import { FrequencyToNoteConverter, NoteName } from "./note";
 import { DefaultReferencePitchHz, getFrequenciesByBin } from "./frequency";
 
-export function findLoudest(sample: Uint8Array) {
+export function findLoudest(sample: number[] | Uint8Array | Float32Array) {
   let loudestBinSoFar = -1;
   let loudestSoFar = 0;
 

@@ -32,20 +32,15 @@ export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
   };
 };
 
-const smoothNoteNumber = makeRollingMode<number | null>({
-  defaultValue: null,
-  bufferSize: 16,
-});
-
 function diffNotes(prev: number | null, current: number | null) {
   if (prev === current) {
     return 0;
   }
   if (prev === null) {
-    return -Infinity;
+    return Infinity;
   }
   if (current === null) {
-    return Infinity;
+    return -Infinity;
   }
   return (current - prev) / 2;
 }
@@ -64,9 +59,11 @@ function getRelativePattern(pattern: NoteName[]) {
 export const makeRelativeMelodyMatcher = ({
   pattern,
   trigger,
+  bufferSize = 32,
 }: {
   pattern: NoteName[];
   trigger: () => void;
+  bufferSize?: number;
 }) => {
   if (pattern.length < 3) {
     throw new Error("Relative pattern must be 3 or more notes");
@@ -74,16 +71,22 @@ export const makeRelativeMelodyMatcher = ({
 
   const relativePattern = getRelativePattern(pattern);
   const match = makeMatcher(relativePattern, trigger);
+  const smoothNoteNumber = makeRollingMode<number | null>({
+    defaultValue: null,
+    bufferSize,
+  });
+
   let prevNote: number | null = null;
   let prevDiff = 0;
   return (rawNote: number | null) => {
     const currentNote = smoothNoteNumber(rawNote);
+
     if (prevNote === currentNote) {
-      // match(prevDiff);
       return;
     }
 
     const diff = diffNotes(prevNote, currentNote);
+    console.info(prevNote, "-", currentNote, "=", diff);
     prevNote = currentNote;
     prevDiff = diff;
     match(diff);
