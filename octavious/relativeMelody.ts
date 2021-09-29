@@ -86,7 +86,7 @@ export const makeRelativeMelodyMatcher = ({
     }
 
     const diff = diffNotes(prevNote, currentNote);
-    console.info(prevNote, "-", currentNote, "=", diff);
+    // console.info(prevNote, "-", currentNote, "=", diff);
     prevNote = currentNote;
     prevDiff = diff;
     match(diff);
