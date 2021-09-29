@@ -19,9 +19,6 @@ export function findLoudest(sample: number[] | Uint8Array | Float32Array) {
       loudestSoFar = loudness;
       loudestBinSoFar = i;
     }
-    if (loudness === 255) {
-      break;
-    }
   }
 
   if (loudestSoFar === 0) {
