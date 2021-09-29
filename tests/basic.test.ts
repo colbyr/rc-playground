@@ -5,32 +5,46 @@ import {
   FrequencyToNoteConverter,
   getFrequenciesByBin,
   makeRelativeMelodyMatcher,
+  makeRollingMode,
+  NoteName,
 } from "../octavious";
+import { plot } from "nodeplotlib";
 
-const freqByBin = getFrequenciesByBin(44100, 512 / 2);
+const freqByBin = getFrequenciesByBin(44100, 2048 / 2);
 const toNote = new FrequencyToNoteConverter(441);
 
 const processor = ({ amplitudeSpectrum, energy, spectralSpread }) => {
-  if (spectralSpread > 25) {
+  if (spectralSpread > 40) {
     return null;
   }
-  const { bin } = findLoudest(amplitudeSpectrum);
+  const loudest = findLoudest(amplitudeSpectrum);
+  if (!loudest) {
+    return null;
+  }
+  const { bin } = loudest;
   const freq = freqByBin[bin];
   return toNote.number(freq);
 };
 
 const testFiles = [
-  ["nothing.wav", false],
-  ["podcast.wav", false],
-  ["podcast-whistle.wav", true],
-  ["whistle.wav", true],
+  // ["nothing.wav", false],
+  // ["podcast.wav", false],
+  // ["podcast-whistle.wav", true],
+  // ["whistle.wav", true],
+  ["02-whistle-on-success.wav", true],
+  // ["05-tone-on-success.wav", true],
 ] as [string, boolean][];
 
 testFiles.forEach(([fileName, shouldMatch]) => {
   test(fileName, () => {
     const trigger = jest.fn();
+    const smoothNoteNumber = makeRollingMode<null | number>({
+      defaultValue: null,
+      bufferSize: 32,
+    });
+    const pattern = ["c", "e", "g"] as NoteName[];
     const matcher = makeRelativeMelodyMatcher({
-      pattern: ["c", "e", "g"],
+      pattern,
       trigger,
     });
 
@@ -39,7 +53,37 @@ testFiles.forEach(([fileName, shouldMatch]) => {
       path.join(__dirname, "audio", fileName)
     );
 
+    const smoothedResult = result.map((n) => smoothNoteNumber(n));
+
     result.forEach((n) => matcher(n));
+    const didTrigger = trigger.mock.calls.length > 0;
+
+    if ((shouldMatch && !didTrigger) || (!shouldMatch && didTrigger)) {
+      plot(
+        [
+          {
+            title: {
+              text: "Notes",
+            },
+            y: result,
+            type: "scatter",
+          },
+          {
+            title: {
+              text: "Smoothed Notes",
+            },
+            y: smoothedResult,
+            type: "scatter",
+          },
+        ],
+        {
+          title: `${fileName} should${
+            shouldMatch ? " " : " not "
+          }match ${pattern.toString()} (FAILED)`,
+          yaxis: {},
+        }
+      );
+    }
 
     if (shouldMatch) {
       expect(trigger).toHaveBeenCalled();
