@@ -1,4 +1,4 @@
-import { processFile } from "../whistlee-meyda/backend";
+import { bufferSize, processFile } from "../whistlee-meyda/backend";
 import path from "path";
 import {
   findLoudest,
@@ -10,11 +10,14 @@ import {
 } from "../octavious";
 import { plot } from "nodeplotlib";
 
-const freqByBin = getFrequenciesByBin(44100, 2048 / 2);
+const maxSpread = 120;
+const sampleRate = 44100;
+
+const freqByBin = getFrequenciesByBin(sampleRate, bufferSize / 2);
 const toNote = new FrequencyToNoteConverter(441);
 
 const processor = ({ amplitudeSpectrum, energy, spectralSpread }) => {
-  if (spectralSpread > 40) {
+  if (spectralSpread > maxSpread) {
     return null;
   }
   const loudest = findLoudest(amplitudeSpectrum);
@@ -30,8 +33,8 @@ const testFiles = [
   // ["nothing.wav", false],
   // ["podcast.wav", false],
   // ["podcast-whistle.wav", true],
-  // ["whistle.wav", true],
   ["02-whistle-on-success.wav", true],
+  // ["whistle.wav", true],
   // ["05-tone-on-success.wav", true],
 ] as [string, boolean][];
 

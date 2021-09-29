@@ -3,7 +3,7 @@ const Meyda = require("meyda");
 const wav = require("node-wav");
 const { range } = require("lodash");
 
-const bufferSize = 2048;
+export const bufferSize = 2048;
 
 function* makeMeydaAnalyzer(channel) {
   const chunks = range(0, channel.length / bufferSize);
