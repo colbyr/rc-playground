@@ -1,4 +1,4 @@
-import { processFile } from "./index";
+import { processFile } from "../whistlee-meyda/backend";
 import path from "path";
 import {
   findLoudest,
@@ -20,7 +20,7 @@ const processor = ({ amplitudeSpectrum, energy, spectralSpread }) => {
 };
 
 const testFiles = [
-  ["nothing.wav", true],
+  ["nothing.wav", false],
   ["podcast.wav", false],
   ["podcast-whistle.wav", true],
   ["whistle.wav", true],
@@ -34,7 +34,10 @@ testFiles.forEach(([fileName, shouldMatch]) => {
       trigger,
     });
 
-    const result = processFile(processor, path.join(__dirname, fileName));
+    const result = processFile(
+      processor,
+      path.join(__dirname, "audio", fileName)
+    );
 
     result.forEach((n) => matcher(n));
 
