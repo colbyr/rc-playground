@@ -19,6 +19,7 @@ type Analysis = {
   duration: number;
   sampleCount: number;
   sampleRate: number;
+  smoothingFactor: number;
   bufferSize: number;
   maxSpread: number;
   amplitudeSpectrum: number[][];
@@ -39,6 +40,7 @@ function process({
   sampleRate,
   bufferSize,
   maxSpread,
+  smoothingFactor,
 }: Analysis): Processed {
   const binToFreq = getFrequenciesByBin(sampleRate, bufferSize / 2);
   const toNote = new FrequencyToNoteConverter(440);
@@ -48,7 +50,7 @@ function process({
   });
   const smoothNote = makeRollingMode<number | null>({
     defaultValue: null,
-    bufferSize: 24,
+    bufferSize: smoothingFactor,
   });
   const spreadFilter = loudestNotes.map((note, index) => {
     const spread = spectralSpread[index] || 0;
@@ -70,17 +72,20 @@ const makeAnalysis = ({
   duration,
   maxSpread,
   sampleRate,
+  smoothingFactor,
 }: {
   bufferSize: number;
   duration: number;
   maxSpread: number;
   sampleRate: number;
+  smoothingFactor: number;
 }): Analysis => ({
   duration,
   maxSpread,
   bufferSize,
   sampleCount: 0,
   sampleRate,
+  smoothingFactor,
   amplitudeSpectrum: [],
   rms: [],
   spectralSpread: [],
@@ -107,6 +112,7 @@ export const AudioAnalyzer = () => {
     const source = audioContext.createMediaElementSource(audio);
     source.connect(audioContext.destination);
     const analysis: Analysis = makeAnalysis({
+      smoothingFactor: 24,
       bufferSize,
       duration: audio.duration,
       maxSpread,
@@ -171,7 +177,24 @@ export const AudioAnalyzer = () => {
         {!analysis && audioFile && <div>analyzing {audioFile.name}...</div>}
         {analysis && (
           <>
-            <h2>Analysis</h2>
+            <table border={1} style={{ marginBottom: "1rem", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Buffer Size</th>
+                  <th>Sample Rate</th>
+                  <th>Max Spread</th>
+                  <th>Smoothing factor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ textAlign: "right" }}>
+                  <td>{analysis.bufferSize}</td>
+                  <td>{analysis.sampleRate}</td>
+                  <td>{analysis.maxSpread}</td>
+                  <td>{analysis.smoothingFactor}</td>
+                </tr>
+              </tbody>
+            </table>
             <div style={{ display: "flex", overflowX: "scroll" }}>
               <Plot
                 data={[{ x, y: analysis.rms }]}
