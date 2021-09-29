@@ -1,7 +1,7 @@
 import { createMeydaAnalyzer } from "meyda";
 import React, { useEffect, useMemo, useState } from "react";
 import Plot from "react-plotly.js";
-import { zip } from "lodash";
+import { range, zip } from "lodash";
 import {
   findLoudest,
   FrequencyToNoteConverter,
@@ -16,8 +16,11 @@ function rotate2DArray(input: number[][]) {
 }
 
 type Analysis = {
+  duration: number;
+  sampleCount: number;
   sampleRate: number;
   bufferSize: number;
+  maxSpread: number;
   amplitudeSpectrum: number[][];
   rms: number[];
   spectralSpread: Array<number | null>;
@@ -35,6 +38,7 @@ function process({
   spectralSpread,
   sampleRate,
   bufferSize,
+  maxSpread,
 }: Analysis): Processed {
   const binToFreq = getFrequenciesByBin(sampleRate, bufferSize / 2);
   const toNote = new FrequencyToNoteConverter(440);
@@ -48,7 +52,7 @@ function process({
   });
   const spreadFilter = loudestNotes.map((note, index) => {
     const spread = spectralSpread[index] || 0;
-    if (spread > 120) {
+    if (spread > maxSpread) {
       return null;
     }
     return note;
@@ -63,12 +67,19 @@ function process({
 
 const makeAnalysis = ({
   bufferSize,
+  duration,
+  maxSpread,
   sampleRate,
 }: {
   bufferSize: number;
+  duration: number;
+  maxSpread: number;
   sampleRate: number;
 }): Analysis => ({
+  duration,
+  maxSpread,
   bufferSize,
+  sampleCount: 0,
   sampleRate,
   amplitudeSpectrum: [],
   rms: [],
@@ -81,6 +92,7 @@ export const AudioAnalyzer = () => {
     | { analysis: null; processed: null }
     | { analysis: Analysis; processed: Processed }
   >({ analysis: null, processed: null });
+  const [maxSpread, setMaxSpread] = useState(120);
 
   const audioContext = useMemo(() => new AudioContext(), []);
 
@@ -96,6 +108,8 @@ export const AudioAnalyzer = () => {
     source.connect(audioContext.destination);
     const analysis: Analysis = makeAnalysis({
       bufferSize,
+      duration: audio.duration,
+      maxSpread,
       sampleRate: audioContext.sampleRate,
     });
 
@@ -106,6 +120,7 @@ export const AudioAnalyzer = () => {
       bufferSize,
       featureExtractors: ["amplitudeSpectrum", "rms", "spectralSpread"],
       callback: (analysisFrame) => {
+        analysis.sampleCount++;
         analysis.amplitudeSpectrum.push(
           (analysisFrame.amplitudeSpectrum as unknown as number[]) || []
         );
@@ -113,6 +128,7 @@ export const AudioAnalyzer = () => {
         analysis.spectralSpread.push(analysisFrame.spectralSpread || null);
       },
     });
+    const startTime = audioContext.currentTime;
     audioContext.resume();
     analyzer.start();
     audio.play();
@@ -120,7 +136,10 @@ export const AudioAnalyzer = () => {
     const onEnd = () => {
       analyzer.stop();
       setResult({
-        analysis,
+        analysis: {
+          ...analysis,
+          duration: audioContext.currentTime - startTime,
+        },
         processed: process(analysis),
       });
     };
@@ -130,9 +149,12 @@ export const AudioAnalyzer = () => {
       analyzer.stop();
       audio.removeEventListener("ended", onEnd);
     };
-  }, [audioContext, audioFile]);
+  }, [audioContext, audioFile, maxSpread]);
 
   console.info({ analysis, processed });
+  const x = analysis
+    ? range(0, analysis.duration, analysis.duration / analysis.sampleCount)
+    : [];
   return (
     <div style={{ padding: "1rem" }}>
       <input
@@ -152,54 +174,54 @@ export const AudioAnalyzer = () => {
             <h2>Analysis</h2>
             <div style={{ display: "flex", overflowX: "scroll" }}>
               <Plot
-                data={[{ y: analysis.rms }]}
+                data={[{ x, y: analysis.rms }]}
                 layout={{ title: "Root Mean Square", width: 520 }}
               />
               <Plot
-                data={[{ y: analysis.spectralSpread }]}
+                data={[{ x, y: analysis.spectralSpread }]}
                 layout={{ title: "Spectral Spread", width: 520 }}
               />
               <Plot
                 data={[
                   {
+                    x,
                     z: rotate2DArray(analysis.amplitudeSpectrum),
                     type: "heatmap",
                   },
                 ]}
-                layout={{ title: "Amplitude Spectrum", width: 520 }}
-              />
-            </div>
-            <h2>Notes</h2>
-            <div style={{ display: "flex", overflowX: "scroll" }}>
-              <Plot
-                data={[{ y: processed?.loudestNotes }]}
                 layout={{
-                  title: "Loudest notes",
+                  title: "Amplitude Spectrum",
                   width: 520,
-                }}
-              />
-              <Plot
-                data={[{ y: processed?.spreadFilter }]}
-                layout={{
-                  title: "Spread filter",
-                  width: 520,
-                }}
-              />
-              <Plot
-                data={[{ y: processed?.notesMode }]}
-                layout={{
-                  title: "Notes Mode",
-                  width: 520,
+                  xaxis: { title: "Seconds" },
                 }}
               />
             </div>
-            <h2>Result</h2>
             <Plot
-              data={[{ y: processed?.smoothedAndFiltered }]}
+              data={[
+                { x, y: processed?.loudestNotes, name: "Loudest notes" },
+                {
+                  x,
+                  y: processed?.spreadFilter,
+                  name: "Spectral Spread Filter",
+                },
+                { x, y: processed?.notesMode, name: "Notes mode" },
+              ]}
               layout={{
-                title: "Result",
+                title: "Notes",
+                xaxis: { title: "Seconds" },
               }}
             />
+            <div>
+              <Plot
+                data={[
+                  { x, y: processed?.smoothedAndFiltered, type: "scatter" },
+                ]}
+                layout={{
+                  title: "Result",
+                  xaxis: { title: "Seconds" },
+                }}
+              />
+            </div>
           </>
         )}
       </main>
