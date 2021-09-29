@@ -61,8 +61,6 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then((micStream) => {
           ? toNote.number(frequencyByBin[loudestNote.bin])
           : null;
 
-      console.info(note);
-
       matchers.forEach((matcher) => matcher(note));
     },
   });
