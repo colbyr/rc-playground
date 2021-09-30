@@ -37,6 +37,7 @@ const matchers = (
 startButton.addEventListener("click", () => {
   console.info("start!");
   const toNote = new FrequencyToNoteConverter(440);
+  // @ts-expect-error
   const notes = circularBuffer(32);
   navigator.mediaDevices.getUserMedia({ audio: true }).then((micStream) => {
     console.info("got mic", micStream);
@@ -68,15 +69,19 @@ startButton.addEventListener("click", () => {
         }
         // if (energy < 10 || spectralSpread > 32) {
         // console.info({energy, spectralSpread})
-        const { bin, loudness } = findLoudest(amplitudeSpectrum);
-        if (loudness < 24 || spectralSpread > maxSpectralSpread) {
+        const loudest = findLoudest(amplitudeSpectrum);
+        if (
+          !loudest ||
+          loudest.loudness < 24 ||
+          spectralSpread > maxSpectralSpread
+        ) {
           notes.push(null);
           matchers.forEach((m) => m(null));
           return;
         }
-        console.info(loudness, spectralSpread, energy);
+        console.info(loudest.loudness, spectralSpread, energy);
 
-        const freq = frequencyByBin[bin];
+        const freq = frequencyByBin[loudest.bin];
         const noteNumber = toNote.number(freq);
         notes.push(noteNumber);
         // const noteMode = modeFast(notes._buffer)

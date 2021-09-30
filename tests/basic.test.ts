@@ -16,7 +16,13 @@ const sampleRate = 44100;
 const freqByBin = getFrequenciesByBin(sampleRate, bufferSize / 2);
 const toNote = new FrequencyToNoteConverter(441);
 
-const processor = ({ amplitudeSpectrum, energy, spectralSpread }) => {
+const processor = ({
+  amplitudeSpectrum,
+  spectralSpread,
+}: {
+  amplitudeSpectrum: Float32Array;
+  spectralSpread: number;
+}) => {
   if (spectralSpread > maxSpread) {
     return null;
   }

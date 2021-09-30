@@ -177,7 +177,11 @@ export const AudioAnalyzer = () => {
         {!analysis && audioFile && <div>analyzing {audioFile.name}...</div>}
         {analysis && (
           <>
-            <table border={1} style={{ marginBottom: "1rem", width: "100%" }}>
+            <table
+              // @ts-expect-error
+              border={1}
+              style={{ border: "1px", marginBottom: "1rem", width: "100%" }}
+            >
               <thead>
                 <tr>
                   <th>Buffer Size</th>

@@ -21,7 +21,7 @@ function* makeMeydaAnalyzer(channel) {
   }
 }
 
-function processFile(processFrame, fileName) {
+export function processFile(processFrame, fileName) {
   const buffer = fs.readFileSync(fileName);
   const wavFile = wav.decode(buffer);
   Meyda.sampleRate = wavFile.sampleRate;
@@ -33,5 +33,3 @@ function processFile(processFrame, fileName) {
   }
   return frames;
 }
-
-module.exports = { processFile };
