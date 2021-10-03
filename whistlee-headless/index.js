@@ -43,12 +43,12 @@ const callbacks = Object.entries(Patterns).reduce(
 );
 
 // once everything is set up, we publish the accessory. Publish should always be the last step!
-whistleeAccessory.publish({
-  username: process.env.WHISTLEE_SWITCH_USERNAME,
-  pincode: process.env.WHISTLEE_SWITCH_PIN,
-  port: process.env.WHISTLEE_SWITCH_PORT,
-  category: Categories.PROGRAMMABLE_SWITCH, // value here defines the symbol shown in the pairing screen
-});
+// whistleeAccessory.publish({
+//   username: process.env.WHISTLEE_SWITCH_USERNAME,
+//   pincode: process.env.WHISTLEE_SWITCH_PIN,
+//   port: process.env.WHISTLEE_SWITCH_PORT,
+//   category: Categories.PROGRAMMABLE_SWITCH, // value here defines the symbol shown in the pairing screen
+// });
 
 const log = (...args) => console.log(new Date().toString(), "|", ...args);
 
@@ -57,6 +57,7 @@ const log = (...args) => console.log(new Date().toString(), "|", ...args);
     headless: true,
     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined,
     args: ["--use-fake-ui-for-media-stream"],
+    ignoreDefaultArgs: ["--mute-audio"],
   });
   const context = browser.defaultBrowserContext();
   await context.overridePermissions(HEADLESS_URL, ["microphone"]);
