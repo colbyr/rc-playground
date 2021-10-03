@@ -1,3 +1,4 @@
+import { once } from "lodash";
 import {
   findLoudest,
   FrequencyToNoteConverter,
@@ -8,9 +9,12 @@ import {
 } from "../octavious";
 import { Patterns, send } from "./comms";
 import { createMeydaAnalyzer } from "meyda";
+import { now, Synth } from "tone";
 
 const DEFAULT_FFT_SIZE = Math.pow(2, 11);
 const MODE_SIZE = 24;
+
+const getSynth = once(() => new Synth().toDestination());
 
 const matchers = (
   Object.entries(Patterns) as unknown as [
@@ -20,7 +24,16 @@ const matchers = (
 ).map(([key, { name, pattern }]) =>
   makeRelativeMelodyMatcher({
     pattern,
-    trigger: () => send(key),
+    trigger: () => {
+      send(key);
+      const currentTime = now();
+      pattern.forEach((note, offset) => {
+        const playNote = `${note}4`;
+        const duration = 0.5;
+        const start = currentTime + duration * offset;
+        getSynth().triggerAttackRelease(playNote, duration, start);
+      });
+    },
     bufferSize: MODE_SIZE,
   })
 );
