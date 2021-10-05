@@ -11,6 +11,7 @@ import {
 const HEADLESS_PORT = 6767;
 const HEADLESS_URL = `http://localhost:${HEADLESS_PORT}/whistlee-headless/`;
 
+const DEBUG = !!process.env.WHISTLEE_DEBUG;
 const whistleeUuid = uuid.generate(process.env.WHISTLEE_SWITCH_ID);
 const whistleeAccessory = new Accessory("Whistlee v0", whistleeUuid);
 
@@ -43,18 +44,20 @@ const callbacks = Object.entries(Patterns).reduce(
 );
 
 // once everything is set up, we publish the accessory. Publish should always be the last step!
-whistleeAccessory.publish({
-  username: process.env.WHISTLEE_SWITCH_USERNAME,
-  pincode: process.env.WHISTLEE_SWITCH_PIN,
-  port: process.env.WHISTLEE_SWITCH_PORT,
-  category: Categories.PROGRAMMABLE_SWITCH, // value here defines the symbol shown in the pairing screen
-});
+if (!DEBUG) {
+  whistleeAccessory.publish({
+    username: process.env.WHISTLEE_SWITCH_USERNAME,
+    pincode: process.env.WHISTLEE_SWITCH_PIN,
+    port: process.env.WHISTLEE_SWITCH_PORT,
+    category: Categories.PROGRAMMABLE_SWITCH, // value here defines the symbol shown in the pairing screen
+  });
+}
 
 const log = (...args) => console.log(new Date().toString(), "|", ...args);
 
 (async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: !DEBUG,
     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined,
     args: ["--use-fake-ui-for-media-stream"],
     ignoreDefaultArgs: ["--mute-audio"],
