@@ -28,7 +28,6 @@ const matchers = (
   makeRelativeMelodyMatcher({
     pattern,
     trigger: (match) => {
-      console.info(JSON.stringify(match));
       send(key);
       const currentTime = now();
       const duration = 0.3;
@@ -81,8 +80,6 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then((micStream) => {
         !pauseListening && loudest && spectralSpread < avgSpread
           ? toNote.number(frequencyByBin[loudest.bin])
           : null;
-
-      // console.info(note);
 
       matchers.forEach((matcher) => matcher(note));
     },
