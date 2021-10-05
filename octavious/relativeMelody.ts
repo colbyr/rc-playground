@@ -81,22 +81,47 @@ export const makeRelativeMelodyMatcher = ({
   });
 
   let prevNote: number | null = null;
-  const buffer = new CircularBuffer(pattern.length);
+  const last3 = new CircularBuffer(pattern.length);
+  const history = new CircularBuffer(128);
+  const smoothedHistory = new CircularBuffer(128);
   const match = makeMatcher(relativePattern, (ctx) => {
-    trigger({ ...ctx, notes: buffer.toArray() });
-    buffer.clear();
+    trigger({
+      ...ctx,
+      notes: last3.toArray(),
+      history: history.toArray(),
+      smoothedHistory: history.toArray(),
+    });
+    last3.clear();
+    history.clear();
+    smoothedHistory.clear();
   });
+  let lastMatchPercent = 0;
   return (rawNote: number | null) => {
+    // @ts-expect-error
+    history.push(rawNote);
     const currentNote = smoothNoteNumber(rawNote);
+    // @ts-expect-error
+    smoothedHistory.push(rawNote);
 
     if (prevNote === currentNote) {
       return;
     }
 
     // @ts-expect-error
-    buffer.push(currentNote);
+    last3.push(currentNote);
     const diff = diffNotes(prevNote, currentNote);
-    match(diff, {});
+    const matchPercent = match(diff, {});
+    if (matchPercent < lastMatchPercent) {
+      console.info(
+        "partial match miss",
+        JSON.stringify({
+          last3: last3.toArray(),
+          history: history.toArray(),
+          smoothedHistory: history.toArray(),
+        })
+      );
+    }
+    lastMatchPercent = matchPercent < 1 ? matchPercent : 0;
     prevNote = currentNote;
   };
 };

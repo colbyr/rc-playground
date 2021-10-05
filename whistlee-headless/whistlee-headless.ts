@@ -28,7 +28,7 @@ const matchers = (
   makeRelativeMelodyMatcher({
     pattern,
     trigger: (match) => {
-      // console.info(match);
+      console.info(JSON.stringify(match));
       send(key);
       const currentTime = now();
       const duration = 0.3;
