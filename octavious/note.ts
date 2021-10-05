@@ -2,55 +2,55 @@ import { DefaultReferencePitchHz } from "./frequency";
 
 export type NoteName =
   | "c"
-  | "c♯"
+  | "c#"
   | "d♭"
   | "d"
-  | "d♯"
+  | "d#"
   | "e♭"
   | "e"
   | "f"
-  | "f♯"
+  | "f#"
   | "g♭"
   | "g"
-  | "g♯"
+  | "g#"
   | "a♭"
   | "a"
-  | "a♯"
+  | "a#"
   | "b♭"
   | "b";
 
 export const NoteNumberByName: Record<NoteName, number> = {
   c: 0,
-  "c♯": 1,
+  "c#": 1,
   "d♭": 1,
   d: 2,
-  "d♯": 3,
+  "d#": 3,
   "e♭": 3,
   e: 4,
   f: 5,
-  "f♯": 6,
+  "f#": 6,
   "g♭": 6,
   g: 7,
-  "g♯": 8,
+  "g#": 8,
   "a♭": 8,
   a: 9,
-  "a♯": 10,
+  "a#": 10,
   "b♭": 10,
   b: 11,
 };
 
 export const NoteNames: NoteName[] = [
   "c", // 0
-  "c♯", // 1
+  "c#", // 1
   "d",
-  "d♯",
+  "d#",
   "e",
   "f",
-  "f♯",
+  "f#",
   "g",
-  "g♯",
+  "g#",
   "a", // 9
-  "a♯",
+  "a#",
   "b",
 ];
 
@@ -64,6 +64,19 @@ export function noteNumberFromFrequency(
 
   const c0Hz = referencePitchHz * Math.pow(2, -4.75);
   return Math.round(12 * Math.log2(frequencyHz / c0Hz));
+}
+
+export function noteOctave(noteNumber: number) {
+  return Math.floor(noteNumber / 12);
+}
+
+export function noteName(noteNumber: number) {
+  const noteI = noteNumber % 12;
+  return NoteNames[noteI];
+}
+
+export function noteFullName(noteNumber: number) {
+  return `${noteName(noteNumber)}${noteOctave(noteNumber)}`;
 }
 
 export function noteNameFromFrequency(noteNumber: number) {
@@ -95,8 +108,7 @@ export class FrequencyToNoteConverter {
 
   name(frequencyHz: number) {
     const noteNumber = this._getNumberMemo(frequencyHz);
-    const noteI = noteNumber % 12;
-    return NoteNames[noteI];
+    return noteName(noteNumber);
   }
 
   number(frequencyHz: number) {
@@ -105,6 +117,6 @@ export class FrequencyToNoteConverter {
 
   octave(frequencyHz: number) {
     const noteNumber = this._getNumberMemo(frequencyHz);
-    return Math.floor(noteNumber / 12);
+    return noteOctave(noteNumber);
   }
 }

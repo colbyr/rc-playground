@@ -1,13 +1,18 @@
+import CircularBuffer from "@stdlib/utils-circular-buffer";
 import { makeArrayMatcher, makePartialArrayMatcher } from "../whistlee/melody";
 import { NoteName, NoteNumberByName } from "./note";
 import { makeRollingMode } from "./smoothing";
 
-export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
+export const makeMatcher = <P, T extends (...args: any) => void>(
+  pattern: P[],
+  trigger: T
+) => {
   const isMatch = makeArrayMatcher(pattern);
   const isPartialMatch = makePartialArrayMatcher(pattern);
-  let patternSoFar: T[] = [];
+  const patternLength = pattern.length;
+  let patternSoFar: P[] = [];
 
-  return (entry: T) => {
+  return (entry: P, ctx: Parameters<T>[0]) => {
     patternSoFar.push(entry);
 
     if (patternSoFar.length > pattern.length) {
@@ -15,20 +20,20 @@ export const makeMatcher = <T>(pattern: T[], trigger: () => void) => {
     }
 
     if (isMatch(patternSoFar)) {
+      trigger({ ...ctx, pattern, match: patternSoFar });
       patternSoFar = [];
-      trigger();
-      return true;
+      return 1.0;
     }
 
-    while (patternSoFar.length > 1) {
+    while (patternSoFar.length > 0) {
       if (isPartialMatch(patternSoFar)) {
-        return false;
+        return patternSoFar.length && patternSoFar.length / patternLength;
       }
 
       patternSoFar.shift();
     }
 
-    return false;
+    return 0.0;
   };
 };
 
@@ -62,7 +67,7 @@ export const makeRelativeMelodyMatcher = ({
   bufferSize = 32,
 }: {
   pattern: NoteName[];
-  trigger: () => void;
+  trigger: (ctx: { notes: (null | number)[] }) => void;
   bufferSize?: number;
 }) => {
   if (pattern.length < 3) {
@@ -70,14 +75,17 @@ export const makeRelativeMelodyMatcher = ({
   }
 
   const relativePattern = getRelativePattern(pattern);
-  const match = makeMatcher(relativePattern, trigger);
   const smoothNoteNumber = makeRollingMode<number | null>({
     defaultValue: null,
     bufferSize,
   });
 
   let prevNote: number | null = null;
-  let prevDiff = 0;
+  const buffer = new CircularBuffer(pattern.length);
+  const match = makeMatcher(relativePattern, (ctx) => {
+    trigger({ ...ctx, notes: buffer.toArray() });
+    buffer.clear();
+  });
   return (rawNote: number | null) => {
     const currentNote = smoothNoteNumber(rawNote);
 
@@ -85,10 +93,10 @@ export const makeRelativeMelodyMatcher = ({
       return;
     }
 
+    // @ts-expect-error
+    buffer.push(currentNote);
     const diff = diffNotes(prevNote, currentNote);
-    // console.info(prevNote, "-", currentNote, "=", diff);
+    match(diff, {});
     prevNote = currentNote;
-    prevDiff = diff;
-    match(diff);
   };
 };

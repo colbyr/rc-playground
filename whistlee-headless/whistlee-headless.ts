@@ -5,6 +5,7 @@ import {
   getFrequenciesByBin,
   makeRelativeMelodyMatcher,
   makeRollingMean,
+  noteFullName,
   NoteName,
 } from "../octavious";
 import { Patterns, send } from "./comms";
@@ -26,16 +27,20 @@ const matchers = (
 ).map(([key, { name, pattern }]) =>
   makeRelativeMelodyMatcher({
     pattern,
-    trigger: () => {
+    trigger: (match) => {
+      // console.info(match);
       send(key);
       const currentTime = now();
-      const duration = 0.5;
+      const duration = 0.3;
       pauseListening = true;
       setTimeout(() => {
         pauseListening = false;
-      }, pattern.length * duration * 1000);
-      pattern.forEach((note, offset) => {
-        const playNote = `${note}4`;
+      }, match.notes.length * duration * 1000);
+      match.notes.forEach((noteNumber, offset) => {
+        if (!noteNumber) {
+          return;
+        }
+        const playNote = noteFullName(noteNumber).toUpperCase();
         const start = currentTime + duration * offset;
         getSynth().triggerAttackRelease(playNote, duration, start);
       });
