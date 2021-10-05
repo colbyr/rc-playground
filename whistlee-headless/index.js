@@ -57,6 +57,7 @@ const log = (...args) => console.log(new Date().toString(), "|", ...args);
 
 (async () => {
   const browser = await puppeteer.launch({
+    devtools: DEBUG,
     headless: !DEBUG,
     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined,
     args: ["--use-fake-ui-for-media-stream"],
