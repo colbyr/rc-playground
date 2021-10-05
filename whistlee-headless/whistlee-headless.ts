@@ -16,6 +16,8 @@ const MODE_SIZE = 24;
 
 const getSynth = once(() => new Synth().toDestination());
 
+let pauseListening = false;
+
 const matchers = (
   Object.entries(Patterns) as unknown as [
     string,
@@ -27,9 +29,13 @@ const matchers = (
     trigger: () => {
       send(key);
       const currentTime = now();
+      const duration = 0.5;
+      pauseListening = true;
+      setTimeout(() => {
+        pauseListening = false;
+      }, pattern.length * duration * 1000);
       pattern.forEach((note, offset) => {
         const playNote = `${note}4`;
-        const duration = 0.5;
         const start = currentTime + duration * offset;
         getSynth().triggerAttackRelease(playNote, duration, start);
       });
@@ -67,9 +73,11 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then((micStream) => {
       const loudest = findLoudest(amplitudeSpectrum);
 
       const note =
-        loudest && spectralSpread < avgSpread
+        !pauseListening && loudest && spectralSpread < avgSpread
           ? toNote.number(frequencyByBin[loudest.bin])
           : null;
+
+      // console.info(note);
 
       matchers.forEach((matcher) => matcher(note));
     },
