@@ -81,4 +81,7 @@ const log = (...args) => console.log(new Date().toString(), "|", ...args);
     log(payload);
   });
   await page.goto(HEADLESS_URL);
+  await page.mouse.move(0, 0);
+  await page.mouse.move(100, 100);
+  await page.click("#start");
 })();

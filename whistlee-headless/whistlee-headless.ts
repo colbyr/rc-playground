@@ -10,80 +10,95 @@ import {
 } from "../octavious";
 import { Patterns, send } from "./comms";
 import { createMeydaAnalyzer } from "meyda";
-import { now, Synth } from "tone";
 
 const DEFAULT_FFT_SIZE = Math.pow(2, 11);
 const MODE_SIZE = 24;
 
-const getSynth = once(() => new Synth().toDestination());
+async function start() {
+  const { now, Synth } = await import("tone");
+  console.log("starting!");
+  const getSynth = once(() => new Synth().toDestination());
 
-let pauseListening = false;
+  let pauseListening = false;
 
-const matchers = (
-  Object.entries(Patterns) as unknown as [
-    string,
-    { name: string; pattern: NoteName[] }
-  ][]
-).map(([key, { name, pattern }]) =>
-  makeRelativeMelodyMatcher({
-    pattern,
-    trigger: (match) => {
-      send(key);
-      const currentTime = now();
-      const duration = 0.3;
-      pauseListening = true;
-      setTimeout(() => {
-        pauseListening = false;
-      }, match.notes.length * duration * 1000);
-      match.notes.forEach((noteNumber, offset) => {
-        if (!noteNumber) {
+  const matchers = (
+    Object.entries(Patterns) as unknown as [
+      string,
+      { name: string; pattern: NoteName[] }
+    ][]
+  ).map(([key, { name, pattern }]) =>
+    makeRelativeMelodyMatcher({
+      pattern,
+      trigger: (match) => {
+        send(key);
+        const currentTime = now();
+        const duration = 0.3;
+        pauseListening = true;
+        setTimeout(() => {
+          pauseListening = false;
+        }, match.notes.length * duration * 1000);
+        match.notes.forEach((noteNumber, offset) => {
+          if (!noteNumber) {
+            return;
+          }
+          const playNote = noteFullName(noteNumber).toUpperCase();
+          const start = currentTime + duration * offset;
+          getSynth().triggerAttackRelease(playNote, duration, start);
+        });
+      },
+      bufferSize: MODE_SIZE,
+    })
+  );
+
+  const getAverageSpread = makeRollingMean({
+    defaultValue: 100,
+    bufferSize: 512,
+  });
+  const referencePitch = 440;
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then((micStream) => {
+    const toNote = new FrequencyToNoteConverter(referencePitch);
+    const frequencyBinCount = DEFAULT_FFT_SIZE / 2;
+    const audioContext = new AudioContext();
+    const frequencyByBin = getFrequenciesByBin(
+      audioContext.sampleRate,
+      frequencyBinCount
+    );
+    const source = audioContext.createMediaStreamSource(micStream);
+
+    const introAudio = new Audio("./welcome-short.wav");
+    const introSource = audioContext.createMediaElementSource(introAudio);
+    introSource.connect(audioContext.destination);
+    introAudio.play();
+
+    createMeydaAnalyzer({
+      startImmediately: true,
+      sampleRate: audioContext.sampleRate,
+      audioContext,
+      source,
+      bufferSize: DEFAULT_FFT_SIZE,
+      featureExtractors: ["amplitudeSpectrum", "spectralSpread"],
+      callback: ({ amplitudeSpectrum, spectralSpread }) => {
+        if (!amplitudeSpectrum || !spectralSpread) {
           return;
         }
-        const playNote = noteFullName(noteNumber).toUpperCase();
-        const start = currentTime + duration * offset;
-        getSynth().triggerAttackRelease(playNote, duration, start);
-      });
-    },
-    bufferSize: MODE_SIZE,
-  })
-);
 
-const getAverageSpread = makeRollingMean({
-  defaultValue: 100,
-  bufferSize: 512,
-});
-const referencePitch = 440;
-const toNote = new FrequencyToNoteConverter(referencePitch);
-const sampleRate = new AudioContext().sampleRate;
-const frequencyBinCount = DEFAULT_FFT_SIZE / 2;
-const frequencyByBin = getFrequenciesByBin(sampleRate, frequencyBinCount);
+        const avgSpread = getAverageSpread(spectralSpread);
+        const loudest = findLoudest(amplitudeSpectrum);
 
-navigator.mediaDevices.getUserMedia({ audio: true }).then((micStream) => {
-  const audioContext = new AudioContext();
-  const source = audioContext.createMediaStreamSource(micStream);
-  createMeydaAnalyzer({
-    startImmediately: true,
-    sampleRate: audioContext.sampleRate,
-    audioContext,
-    source,
-    bufferSize: DEFAULT_FFT_SIZE,
-    featureExtractors: ["amplitudeSpectrum", "spectralSpread"],
-    callback: ({ amplitudeSpectrum, spectralSpread }) => {
-      if (!amplitudeSpectrum || !spectralSpread) {
-        return;
-      }
+        const note =
+          !pauseListening && loudest && spectralSpread < avgSpread
+            ? toNote.number(frequencyByBin[loudest.bin])
+            : null;
 
-      const avgSpread = getAverageSpread(spectralSpread);
-      const loudest = findLoudest(amplitudeSpectrum);
-
-      const note =
-        !pauseListening && loudest && spectralSpread < avgSpread
-          ? toNote.number(frequencyByBin[loudest.bin])
-          : null;
-
-      matchers.forEach((matcher) => matcher(note));
-    },
+        matchers.forEach((matcher) => matcher(note));
+      },
+    });
   });
+}
+
+document.getElementById("start")!.addEventListener("click", () => {
+  start();
 });
 
 export {};

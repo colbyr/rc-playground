@@ -7,6 +7,8 @@ import {
   FrequencyToNoteConverter,
   getFrequenciesByBin,
   makeRollingMode,
+  noteFullName,
+  NoteNames,
 } from "../octavious";
 
 const bufferSize = 2048;
@@ -23,7 +25,10 @@ type Analysis = {
   bufferSize: number;
   maxSpread: number;
   amplitudeSpectrum: number[][];
+  chroma: number[][];
   rms: number[];
+  spectralCentroid: Array<number | null>;
+  spectralFlatness: Array<number | null>;
   spectralSpread: Array<number | null>;
 };
 
@@ -31,8 +36,12 @@ type Processed = {
   loudestNotes: Array<number | null>;
   spreadFilter: Array<number | null>;
   notesMode: Array<number | null>;
+  doubleMode: Array<number | null>;
   smoothedAndFiltered: Array<number | null>;
 };
+
+const notesYAxis = (notes: number[]) =>
+  notes.map((n) => `${n} (${noteFullName(n)})`);
 
 function process({
   amplitudeSpectrum,
@@ -52,6 +61,10 @@ function process({
     defaultValue: null,
     bufferSize: smoothingFactor,
   });
+  const doubleSmooth = makeRollingMode<number | null>({
+    defaultValue: null,
+    bufferSize: smoothingFactor,
+  });
   const spreadFilter = loudestNotes.map((note, index) => {
     const spread = spectralSpread[index] || 0;
     if (spread > maxSpread) {
@@ -59,10 +72,12 @@ function process({
     }
     return note;
   });
+  const notesMode = loudestNotes.map(smoothNote);
   return {
     loudestNotes,
     spreadFilter,
-    notesMode: loudestNotes.map(smoothNote),
+    notesMode,
+    doubleMode: notesMode.map(doubleSmooth),
     smoothedAndFiltered: spreadFilter.map(smoothNote),
   };
 }
@@ -87,7 +102,10 @@ const makeAnalysis = ({
   sampleRate,
   smoothingFactor,
   amplitudeSpectrum: [],
+  chroma: [],
   rms: [],
+  spectralCentroid: [],
+  spectralFlatness: [],
   spectralSpread: [],
 });
 
@@ -124,13 +142,23 @@ export const AudioAnalyzer = () => {
       audioContext,
       source,
       bufferSize,
-      featureExtractors: ["amplitudeSpectrum", "rms", "spectralSpread"],
+      featureExtractors: [
+        "amplitudeSpectrum",
+        "chroma",
+        "rms",
+        "spectralCentroid",
+        "spectralFlatness",
+        "spectralSpread",
+      ],
       callback: (analysisFrame) => {
         analysis.sampleCount++;
         analysis.amplitudeSpectrum.push(
           (analysisFrame.amplitudeSpectrum as unknown as number[]) || []
         );
+        analysis.chroma.push(analysisFrame.chroma || []);
         analysis.rms.push(analysisFrame.rms || 0);
+        analysis.spectralCentroid.push(analysisFrame.spectralCentroid || null);
+        analysis.spectralFlatness.push(analysisFrame.spectralFlatness || null);
         analysis.spectralSpread.push(analysisFrame.spectralSpread || null);
       },
     });
@@ -161,6 +189,8 @@ export const AudioAnalyzer = () => {
   const x = analysis
     ? range(0, analysis.duration, analysis.duration / analysis.sampleCount)
     : [];
+
+  const noteRange = range(0, 100).map((num) => noteFullName(num));
   return (
     <div style={{ padding: "1rem" }}>
       <input
@@ -201,8 +231,27 @@ export const AudioAnalyzer = () => {
             </table>
             <div style={{ display: "flex", overflowX: "scroll" }}>
               <Plot
-                data={[{ x, y: analysis.rms }]}
-                layout={{ title: "Root Mean Square", width: 520 }}
+                data={[
+                  {
+                    y: NoteNames,
+                    x,
+                    z: rotate2DArray(analysis.chroma),
+                    type: "heatmap",
+                  },
+                ]}
+                layout={{
+                  title: "Choma",
+                  width: 520,
+                  xaxis: { title: "Seconds" },
+                }}
+              />
+              <Plot
+                data={[{ x, y: analysis.spectralCentroid }]}
+                layout={{ title: "Spectral Centroid", width: 520 }}
+              />
+              <Plot
+                data={[{ x, y: analysis.spectralFlatness }]}
+                layout={{ title: "Spectral Flatness", width: 520 }}
               />
               <Plot
                 data={[{ x, y: analysis.spectralSpread }]}
@@ -222,16 +271,29 @@ export const AudioAnalyzer = () => {
                   xaxis: { title: "Seconds" },
                 }}
               />
+              <Plot
+                data={[{ x, y: analysis.rms }]}
+                layout={{ title: "Root Mean Square", width: 520 }}
+              />
             </div>
             <Plot
               data={[
-                { x, y: processed?.loudestNotes, name: "Loudest notes" },
                 {
                   x,
-                  y: processed?.spreadFilter,
+                  y: notesYAxis(processed?.loudestNotes),
+                  name: "Loudest notes",
+                },
+                {
+                  x,
+                  y: notesYAxis(processed?.spreadFilter),
                   name: "Spectral Spread Filter",
                 },
-                { x, y: processed?.notesMode, name: "Notes mode" },
+                { x, y: notesYAxis(processed?.notesMode), name: "Notes mode" },
+                {
+                  x,
+                  y: notesYAxis(processed?.doubleMode),
+                  name: "Double mode",
+                },
               ]}
               layout={{
                 title: "Notes",
